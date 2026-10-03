@@ -926,10 +926,8 @@
   "Navigation": "வழிசெலுத்தல்",
   "Set status for {{count}} book(s)_one": "{{count}} புத்தகத்திற்கான நிலையை அமைக்கவும்",
   "Set status for {{count}} book(s)_other": "{{count}} புத்தகங்களுக்கான நிலையை அமைக்கவும்",
-  "Mark as Unread": "படிக்காததாகக் குறிக்கவும்",
   "Mark as Finished": "முடித்ததாகக் குறிக்கவும்",
   "Finished": "முடிந்தது",
-  "Unread": "படிக்கவில்லை",
   "Clear Status": "நிலையை அழி",
   "Status": "நிலை",
   "Loading": "ஏற்றுகிறது...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "ரீடரை இணைக்க முடியவில்லை. குறியீட்டைச் சரிபார்க்கவும், அல்லது ரீடரில் மீண்டும் உள்நுழையவும்.",
   "Link Reader": "ரீடரை இணை",
   "Failed to copy the image": "படத்தை நகலெடுக்க முடியவில்லை",
-  "Copy Image": "படத்தை நகலெடு"
+  "Copy Image": "படத்தை நகலெடு",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

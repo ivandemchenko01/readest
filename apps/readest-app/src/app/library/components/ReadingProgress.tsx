@@ -53,7 +53,7 @@ const ReadingProgress: React.FC<ReadingProgressProps> = memo(
       if (SHOW_UNREAD_STATUS_BADGE) {
         return (
           <div className='flex justify-start'>
-            <StatusBadge status={book.readingStatus}>{_('Unread')}</StatusBadge>
+            <StatusBadge status={book.readingStatus}>{_('Want to Read')}</StatusBadge>
           </div>
         );
       } else {

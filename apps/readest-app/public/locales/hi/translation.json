@@ -926,10 +926,8 @@
   "Navigation": "नेविगेशन",
   "Set status for {{count}} book(s)_one": "{{count}} किताब की स्थिति सेट करें",
   "Set status for {{count}} book(s)_other": "{{count}} किताबों की स्थिति सेट करें",
-  "Mark as Unread": "अपठित के रूप में चिह्नित करें",
   "Mark as Finished": "समाप्त के रूप में चिह्नित करें",
   "Finished": "समाप्त",
-  "Unread": "अपठित",
   "Clear Status": "स्थिति साफ़ करें",
   "Status": "स्थिति",
   "Loading": "लोड हो रहा है...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "रीडर लिंक नहीं हो सका। कोड जाँचें, या रीडर पर फिर से साइन इन करें।",
   "Link Reader": "रीडर लिंक करें",
   "Failed to copy the image": "छवि कॉपी करने में विफल",
-  "Copy Image": "छवि कॉपी करें"
+  "Copy Image": "छवि कॉपी करें",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

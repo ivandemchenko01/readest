@@ -74,7 +74,6 @@
   "Select Book": "Kitobni tanlash",
   "Group Books": "Kitoblarni guruhlash",
   "Mark as Finished": "Tugatilgan deb belgilash",
-  "Mark as Unread": "Oʻqilmagan deb belgilash",
   "Clear Status": "Holatni tozalash",
   "Share Book": "Kitobni ulashish",
   "Delete": "Oʻchirish",
@@ -129,7 +128,6 @@
   "Restart App": "Ilovani qayta ishga tushirish",
   "Start Migration": "Koʻchirishni boshlash",
   "Finished": "Tugatilgan",
-  "Unread": "Oʻqilmagan",
   "Open": "Ochish",
   "Status": "Holat",
   "Details": "Tafsilotlar",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Qurilmani ulab bo‘lmadi. Kodni tekshiring yoki qurilmada qayta tizimga kiring.",
   "Link Reader": "Qurilmani ulash",
   "Failed to copy the image": "Rasmni nusxalab bo'lmadi",
-  "Copy Image": "Rasmni nusxalash"
+  "Copy Image": "Rasmni nusxalash",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

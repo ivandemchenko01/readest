@@ -17,6 +17,7 @@ import { FILE_REVEAL_LABELS, FILE_REVEAL_PLATFORMS } from '@/utils/os';
 import { Book, BooksGroup, ReadingStatus } from '@/types/book';
 import {
   getBookContextMenuItemIds,
+  getMobileBookContextMenuItemIds,
   type BookContextMenuItemId,
 } from '@/app/library/utils/libraryUtils';
 import { isTauriAppPlatform } from '@/services/environment';
@@ -157,7 +158,12 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     [isSelectMode, handleLibraryNavigation],
   );
 
-  const buildBookMenuItems = (book: Book): BookContextMenuItem[] => {
+  // Mobile has no native context menu: a long press on a book opens the
+  // compact in-app menu (status, details, select) instead of selecting it.
+  const isTouchMenu = !!appService?.isMobileApp;
+  const pressPointRef = useRef({ x: 0, y: 0 });
+
+  const buildBookMenuItems = (book: Book, compact: boolean): BookContextMenuItem[] => {
     const osPlatform = getOSPlatform();
     const fileRevealLabel =
       FILE_REVEAL_LABELS[osPlatform as FILE_REVEAL_PLATFORMS] || FILE_REVEAL_LABELS.default;
@@ -167,7 +173,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     // shuffles the order on every open (issue #4389).
     const itemOptions: Record<BookContextMenuItemId, BookContextMenuItem> = {
       select: {
-        text: itemSelected ? _('Deselect Book') : _('Select Book'),
+        text: compact ? _('Select') : itemSelected ? _('Deselect Book') : _('Select Book'),
         action: async () => {
           if (!isSelectMode) handleSetSelectMode(true);
           toggleSelection(book.hash);
@@ -183,16 +189,22 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
           handleGroupBooks();
         },
       },
+      markUnread: {
+        text: _('Mark as Want to Read'),
+        action: async () => {
+          handleUpdateReadingStatus(book, 'unread');
+        },
+      },
+      markReading: {
+        text: _('Mark as Reading'),
+        action: async () => {
+          handleUpdateReadingStatus(book, 'reading');
+        },
+      },
       markFinished: {
         text: _('Mark as Finished'),
         action: async () => {
           handleUpdateReadingStatus(book, 'finished');
-        },
-      },
-      markUnread: {
-        text: _('Mark as Unread'),
-        action: async () => {
-          handleUpdateReadingStatus(book, 'unread');
         },
       },
       markAbandoned: {
@@ -208,7 +220,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         },
       },
       showDetails: {
-        text: _('Show Book Details'),
+        text: compact ? _('Details') : _('Show Book Details'),
         action: async () => {
           showBookDetailsModal(book);
         },
@@ -273,10 +285,13 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         },
       },
     };
-    return getBookContextMenuItemIds(book, {
-      localSend: isTauriAppPlatform() && isLocalSendEnabled(),
-      absOffline: isTauriAppPlatform(),
-    }).map((id) => itemOptions[id]);
+    const ids = compact
+      ? getMobileBookContextMenuItemIds(book)
+      : getBookContextMenuItemIds(book, {
+          localSend: isTauriAppPlatform() && isLocalSendEnabled(),
+          absOffline: isTauriAppPlatform(),
+        });
+    return ids.map((id) => itemOptions[id]);
   };
 
   const buildGroupMenuItems = (group: BooksGroup): BookContextMenuItem[] => {
@@ -315,7 +330,9 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   };
 
   const buildMenuItems = () =>
-    'format' in item ? buildBookMenuItems(item as Book) : buildGroupMenuItems(item as BooksGroup);
+    'format' in item
+      ? buildBookMenuItems(item as Book, isTouchMenu)
+      : buildGroupMenuItems(item as BooksGroup);
 
   // In-app fallback for the native context menu: GTK3 menus popped over
   // Wayland after the trigger button was already released (a touchpad
@@ -403,10 +420,18 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     [item, itemSelected, isSelectMode, settings.localBooksDir],
   );
 
+  const handleLongPress = (position: { x: number; y: number }) => {
+    if (isTouchMenu && !isSelectMode && 'format' in item) {
+      setInAppMenuPosition(position);
+      return;
+    }
+    handleSelectItem();
+  };
+
   const { pressing, handlers } = useLongPress(
     {
       onLongPress: () => {
-        handleSelectItem();
+        handleLongPress(pressPointRef.current);
       },
       onTap: () => {
         handleOpenItem();
@@ -415,11 +440,11 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         if (appService?.hasContextMenu) {
           handleContextMenu({ x: e.clientX, y: e.clientY });
         } else if (appService?.isAndroidApp) {
-          handleSelectItem();
+          handleLongPress({ x: e.clientX, y: e.clientY });
         }
       },
     },
-    [isSelectMode, handleSelectItem, handleOpenItem, handleContextMenu],
+    [isSelectMode, item, handleSelectItem, handleOpenItem, handleContextMenu],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -465,6 +490,10 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         }}
         {...itemDataAttrs}
         {...handlers}
+        onPointerDown={(e) => {
+          pressPointRef.current = { x: e.clientX, y: e.clientY };
+          handlers.onPointerDown(e);
+        }}
       >
         <div className='flex h-full flex-col justify-end'>
           {'format' in item ? (
@@ -497,6 +526,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         <BookContextMenuPopup
           position={inAppMenuPosition}
           items={buildMenuItems()}
+          touch={isTouchMenu}
           onClose={() => setInAppMenuPosition(null)}
         />
       )}

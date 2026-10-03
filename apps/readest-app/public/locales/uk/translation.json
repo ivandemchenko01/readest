@@ -948,10 +948,8 @@
   "Navigation": "Навігація",
   "Set status for {{count}} book(s)_one": "Встановити статус для {{count}} книги",
   "Set status for {{count}} book(s)_other": "Встановити статус для {{count}} книг",
-  "Mark as Unread": "Позначити як непрочитане",
   "Mark as Finished": "Позначити як завершене",
   "Finished": "Завершено",
-  "Unread": "Непрочитане",
   "Clear Status": "Очистити статус",
   "Status": "Статус",
   "Set status for {{count}} book(s)_few": "Встановити статус для {{count}} книг",
@@ -2647,5 +2645,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Не вдалося під'єднати пристрій. Перевірте код або увійдіть на пристрої знову.",
   "Link Reader": "Під'єднати пристрій",
   "Failed to copy the image": "Не вдалося скопіювати зображення",
-  "Copy Image": "Копіювати зображення"
+  "Copy Image": "Копіювати зображення",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

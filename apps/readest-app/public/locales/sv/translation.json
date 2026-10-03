@@ -926,10 +926,8 @@
   "Navigation": "Navigering",
   "Set status for {{count}} book(s)_one": "Ange status för {{count}} bok",
   "Set status for {{count}} book(s)_other": "Ange status för {{count}} böcker",
-  "Mark as Unread": "Markera som oläst",
   "Mark as Finished": "Markera som läst",
   "Finished": "Läst",
-  "Unread": "Oläst",
   "Clear Status": "Rensa status",
   "Status": "Status",
   "Loading": "Laddar...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Det gick inte att länka läsplattan. Kontrollera koden eller logga in igen på läsplattan.",
   "Link Reader": "Länka läsplatta",
   "Failed to copy the image": "Det gick inte att kopiera bilden",
-  "Copy Image": "Kopiera bild"
+  "Copy Image": "Kopiera bild",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

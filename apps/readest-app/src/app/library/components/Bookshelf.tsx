@@ -8,7 +8,12 @@ import { PiPlus } from 'react-icons/pi';
 import { useOverlayScrollbars } from 'overlayscrollbars-react';
 import 'overlayscrollbars/overlayscrollbars.css';
 import { Book, BooksGroup, type LibrarySearchConfig, ReadingStatus } from '@/types/book';
-import { LibraryGroupByType, LibrarySortByType, LibraryViewModeType } from '@/types/settings';
+import {
+  LibraryGroupByType,
+  LibrarySortByType,
+  type LibraryStatusFilterType,
+  LibraryViewModeType,
+} from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useAutoFocus } from '@/hooks/useAutoFocus';
@@ -22,9 +27,12 @@ import { useBookshelfDate } from '@/hooks/useBookshelfDate';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import {
+  countBooksByStatus,
   createBookFilter,
   createBookSorter,
   ensureLibraryGroupByType,
+  ensureLibraryStatusFilter,
+  filterBooksByStatus,
   expandBookshelfSelection,
   selectAbsOfflineBooks,
   selectDownloadableBooks,
@@ -61,6 +69,8 @@ import { useAuth } from '@/context/AuthContext';
 import GroupingModal from './GroupingModal';
 import TaggingModal from './TaggingModal';
 import SetStatusAlert from './SetStatusAlert';
+import StatusFilterBar from './StatusFilterBar';
+import { saveSysSettings } from '@/helpers/settings';
 import { useOpenBook } from '../hooks/useOpenBook';
 import LibrarySearchResults from './LibrarySearchResults';
 
@@ -255,17 +265,32 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     [libraryBooks, absServers, settings.absServers],
   );
 
+  // Status filter chips: counts over the whole visible library in one pass,
+  // then every shelf/search/group derivation below runs on the filtered list.
+  const statusFilter = ensureLibraryStatusFilter(settings.libraryStatusFilter);
+  const statusCounts = useMemo(() => countBooksByStatus(visibleBooks), [visibleBooks]);
+  const statusBooks = useMemo(
+    () => filterBooksByStatus(visibleBooks, statusFilter),
+    [visibleBooks, statusFilter],
+  );
+  const handleStatusFilterChange = useCallback(
+    (value: LibraryStatusFilterType) => {
+      void saveSysSettings(envConfig, 'libraryStatusFilter', value);
+    },
+    [envConfig],
+  );
+
   const filteredBooks = useMemo(() => {
     const bookFilter = createBookFilter(queryTerm);
-    return queryTerm ? visibleBooks.filter((book) => bookFilter(book)) : visibleBooks;
-  }, [visibleBooks, queryTerm]);
+    return queryTerm ? statusBooks.filter((book) => bookFilter(book)) : statusBooks;
+  }, [statusBooks, queryTerm]);
 
   const manualGroupName = groupBy === LibraryGroupByType.Group ? getGroupName(groupId) : undefined;
   const pageDurations = useMedianPageDurationsSecs(libraryBooks, showTimeRemaining);
   const today = useBookshelfDate(definitions);
   const rawMatches = useMemo(
-    () => matchBookshelves(visibleBooks, definitions, today),
-    [visibleBooks, definitions, today],
+    () => matchBookshelves(statusBooks, definitions, today),
+    [statusBooks, definitions, today],
   );
   const ownership = useMemo(
     () => assignBookshelfOwnership(definitions, rawMatches),
@@ -274,14 +299,14 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const results = useMemo(
     () =>
       evaluateBookshelves(
-        visibleBooks,
+        statusBooks,
         definitions,
         uiLanguage,
         pageDurations,
         rawMatches,
         ownership,
       ),
-    [visibleBooks, definitions, uiLanguage, pageDurations, rawMatches, ownership],
+    [statusBooks, definitions, uiLanguage, pageDurations, rawMatches, ownership],
   );
   const sections = useMemo<ShelfSection[]>(() => {
     // Search is a flat view of every eligible library book, independent of all shelves.
@@ -311,8 +336,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         ? [
             {
               definition: defaultShelf,
-              books: visibleBooks,
-              matching: visibleBooks.length,
+              books: statusBooks,
+              matching: statusBooks.length,
               excluded: 0,
             },
           ]
@@ -351,7 +376,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     groupId,
     activeShelfId,
     unscopedGroup,
-    visibleBooks,
+    statusBooks,
     groupBy,
     globalGroupBy,
     globalSort,
@@ -375,14 +400,15 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     [sortedBookshelfItems],
   );
   useEffect(() => {
-    // A search with no hits filters the group down to nothing; that must not
-    // throw the user back to the library root.
-    if (!groupId || queryTerm) return;
+    // A search or status filter with no hits filters the group down to
+    // nothing; that must not throw the user back to the library root.
+    if (!groupId || queryTerm || statusFilter !== 'all') return;
     if ((!unscopedGroup && !activeShelf?.enabled) || currentShelfBooks.length === 0)
       updateUrlParams({ group: null, shelf: null });
   }, [
     groupId,
     queryTerm,
+    statusFilter,
     unscopedGroup,
     activeShelf?.enabled,
     currentShelfBooks.length,
@@ -949,6 +975,13 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             {_('Search in book contents')}
           </button>
         </div>
+      )}
+      {visibleBooks.length > 0 && !contentSearch?.query.trim() && (
+        <StatusFilterBar
+          value={statusFilter}
+          counts={statusCounts}
+          onChange={handleStatusFilterChange}
+        />
       )}
       {!visibleBooks.length ? (
         <div className='flex min-h-0 flex-1 items-center-safe justify-center overflow-y-auto p-6'>

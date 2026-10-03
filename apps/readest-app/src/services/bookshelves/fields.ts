@@ -1,6 +1,7 @@
 import type { Book } from '@/types/book';
 import type { BookshelfFieldKind, BookshelfOperator } from '@/types/bookshelf';
 import { stubTranslation as _ } from '@/utils/misc';
+import { getBookStatusCategory } from '@/utils/book';
 
 type FieldValue = string | number | boolean | string[] | undefined;
 export interface BookshelfField {
@@ -97,14 +98,15 @@ export const BOOKSHELF_FIELDS: BookshelfField[] = [
   {
     id: 'status',
     choices: [
-      { value: 'unread', label: _('Unread') },
+      { value: 'unread', label: _('Want to Read') },
       { value: 'reading', label: _('Reading') },
       { value: 'finished', label: _('Finished') },
       { value: 'abandoned', label: _('On hold') },
+      { value: 'none', label: _('No status') },
     ],
     label: _('Reading status'),
     kind: 'text',
-    read: (b) => b.readingStatus || (b.progress ? 'reading' : 'unread'),
+    read: getBookStatusCategory,
   },
   {
     id: 'progress',

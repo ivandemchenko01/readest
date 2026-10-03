@@ -914,10 +914,8 @@
   "Actions": "操作",
   "Navigation": "導覽",
   "Set status for {{count}} book(s)_other": "設定 {{count}} 本書的狀態",
-  "Mark as Unread": "標示為未讀",
   "Mark as Finished": "標示為已讀",
   "Finished": "已讀",
-  "Unread": "未讀",
   "Clear Status": "清除狀態",
   "Status": "狀態",
   "Loading": "正在載入",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "無法連結閱讀器。請檢查代碼，或在閱讀器上重新登入。",
   "Link Reader": "連結閱讀器",
   "Failed to copy the image": "圖片複製失敗",
-  "Copy Image": "複製圖片"
+  "Copy Image": "複製圖片",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

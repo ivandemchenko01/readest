@@ -970,10 +970,8 @@
   "Navigation": "التنقل",
   "Set status for {{count}} book(s)_one": "تعيين الحالة لـ {{count}} كتاب",
   "Set status for {{count}} book(s)_other": "تعيين الحالة لـ {{count}} كتب",
-  "Mark as Unread": "تحديد كغير مقروء",
   "Mark as Finished": "تحديد كمنتهى",
   "Finished": "منتهى",
-  "Unread": "غير مقروء",
   "Clear Status": "مسح الحالة",
   "Status": "الحالة",
   "Set status for {{count}} book(s)_zero": "تعيين الحالة للكتب",
@@ -2775,5 +2773,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "تعذّر ربط القارئ. تحقّق من الرمز أو سجّل الدخول مجددًا على القارئ.",
   "Link Reader": "ربط القارئ",
   "Failed to copy the image": "فشل نسخ الصورة",
-  "Copy Image": "نسخ الصورة"
+  "Copy Image": "نسخ الصورة",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

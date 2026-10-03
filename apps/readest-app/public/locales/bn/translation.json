@@ -926,10 +926,8 @@
   "Navigation": "নেভিগেশন",
   "Set status for {{count}} book(s)_one": "{{count}} টি বইয়ের স্ট্যাটাস সেট করুন",
   "Set status for {{count}} book(s)_other": "{{count}} টি বইয়ের স্ট্যাটাস সেট করুন",
-  "Mark as Unread": "পড়া হয়নি হিসেবে চিহ্নিত করুন",
   "Mark as Finished": "পড়া শেষ হিসেবে চিহ্নিত করুন",
   "Finished": "শেষ হয়েছে",
-  "Unread": "অপঠিত",
   "Clear Status": "স্থিতি মুছুন",
   "Status": "অবস্থা",
   "Loading": "লোড হচ্ছে...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "রিডার লিঙ্ক করা যায়নি। কোডটি যাচাই করুন, অথবা রিডারে আবার সাইন ইন করুন।",
   "Link Reader": "রিডার লিঙ্ক করুন",
   "Failed to copy the image": "ছবি কপি করা যায়নি",
-  "Copy Image": "ছবি কপি করুন"
+  "Copy Image": "ছবি কপি করুন",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

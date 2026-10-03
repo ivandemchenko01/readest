@@ -914,10 +914,8 @@
   "Actions": "アクション",
   "Navigation": "ナビゲーション",
   "Set status for {{count}} book(s)_other": "{{count}} 冊の本のステータスを設定",
-  "Mark as Unread": "未読にする",
   "Mark as Finished": "読了にする",
   "Finished": "読了",
-  "Unread": "未読",
   "Clear Status": "ステータスをクリア",
   "Status": "ステータス",
   "Loading": "読み込み中",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "リーダーをリンクできませんでした。コードを確認するか、リーダーで再度サインインしてください。",
   "Link Reader": "リーダーをリンク",
   "Failed to copy the image": "画像のコピーに失敗しました",
-  "Copy Image": "画像をコピー"
+  "Copy Image": "画像をコピー",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

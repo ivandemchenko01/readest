@@ -89,7 +89,6 @@
   "Select Book": "წიგნის მონიშვნა",
   "Group Books": "წიგნების დაჯგუფება",
   "Mark as Finished": "მონიშვნა როგორც დასრულებული",
-  "Mark as Unread": "მონიშვნა როგორც წაუკითხავი",
   "Mark as On hold": "მონიშვნა როგორც შეჩერებული",
   "Clear Status": "სტატუსის გასუფთავება",
   "Search on Goodreads": "ძებნა Goodreads-ზე",
@@ -251,7 +250,6 @@
   "{{hours}}h left": "დარჩა {{hours}}სთ",
   "Finished": "დასრულებული",
   "On hold": "შეჩერებული",
-  "Unread": "წაუკითხავი",
   "Recently read": "ბოლოს წაკითხული",
   "Open": "გახსნა",
   "Status": "სტატუსი",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "წამკითხველის დაკავშირება ვერ მოხერხდა. შეამოწმეთ კოდი ან ხელახლა შედით წამკითხველზე.",
   "Link Reader": "წამკითხველის დაკავშირება",
   "Failed to copy the image": "სურათის კოპირება ვერ მოხერხდა",
-  "Copy Image": "სურათის კოპირება"
+  "Copy Image": "სურათის კოპირება",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

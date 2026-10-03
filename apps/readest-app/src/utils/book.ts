@@ -4,6 +4,7 @@ import {
   BOOK_CONFIG_SCHEMA_VERSION,
   BookConfig,
   BookProgress,
+  BookStatusCategory,
   WritingMode,
 } from '@/types/book';
 import { SUPPORTED_LANGS } from '@/services/constants';
@@ -449,6 +450,14 @@ export const isCurrentlyReadingBook = (book: Book): boolean =>
   book.readingStatus !== 'finished' &&
   book.readingStatus !== 'abandoned' &&
   book.readingStatus !== 'unread';
+
+/**
+ * Resolve a book's UI status. An explicit `readingStatus` wins; otherwise a
+ * book with reading progress counts as Reading (opening an 'unread' book clears
+ * the flag to `undefined`) and a never-opened one has no status ('none').
+ */
+export const getBookStatusCategory = (book: Book): BookStatusCategory =>
+  book.readingStatus ?? (book.progress != null ? 'reading' : 'none');
 
 export const getBookDirFromWritingMode = (writingMode: WritingMode) => {
   switch (writingMode) {

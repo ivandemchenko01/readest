@@ -914,10 +914,8 @@
   "Actions": "Tindakan",
   "Navigation": "Navigasi",
   "Set status for {{count}} book(s)_other": "Tetapkan status untuk {{count}} buku",
-  "Mark as Unread": "Tandakan sebagai Belum Dibaca",
   "Mark as Finished": "Tandakan sebagai Selesai",
   "Finished": "Selesai",
-  "Unread": "Belum Dibaca",
   "Clear Status": "Kosongkan Status",
   "Status": "Status",
   "Loading": "Memuatkan...",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Tidak dapat memautkan pembaca. Semak kod, atau log masuk semula pada pembaca.",
   "Link Reader": "Pautkan pembaca",
   "Failed to copy the image": "Gagal menyalin imej",
-  "Copy Image": "Salin Imej"
+  "Copy Image": "Salin Imej",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

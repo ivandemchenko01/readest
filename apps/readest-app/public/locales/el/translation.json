@@ -926,10 +926,8 @@
   "Navigation": "Πλοήγηση",
   "Set status for {{count}} book(s)_one": "Ορισμός κατάστασης για {{count}} βιβλίο",
   "Set status for {{count}} book(s)_other": "Ορισμός κατάστασης για {{count}} βιβλία",
-  "Mark as Unread": "Σήμανση ως μη αναγνωσμένο",
   "Mark as Finished": "Σήμανση ως ολοκληρωμένο",
   "Finished": "Ολοκληρώθηκε",
-  "Unread": "Μη αναγνωσμένο",
   "Clear Status": "Εκκαθάριση κατάστασης",
   "Status": "Κατάσταση",
   "Loading": "Φόρτωση...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Δεν ήταν δυνατή η σύνδεση της συσκευής ανάγνωσης. Ελέγξτε τον κωδικό ή συνδεθείτε ξανά στη συσκευή ανάγνωσης.",
   "Link Reader": "Σύνδεση συσκευής",
   "Failed to copy the image": "Αποτυχία αντιγραφής της εικόνας",
-  "Copy Image": "Αντιγραφή εικόνας"
+  "Copy Image": "Αντιγραφή εικόνας",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }
