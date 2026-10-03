@@ -14,6 +14,12 @@ Upstream project conventions live in `apps/readest-app/AGENTS.md` — read it fi
   - Deep-link schemes (`readest://`, OAuth) are shared with the official app — Android shows a chooser. Intentional (OAuth redirects are whitelisted upstream).
 - **Fork features** (each in its own branch off `fork-base`): book reading statuses, rating/review, reading-statistics screen.
   Reuse existing data (`Book.readingStatus`, `statistics.db` KOReader schema) instead of parallel storage.
+- **Performance on the reader is the #1 rule** (Onyx Boox Go 7: weak CPU, slow e-ink refresh). New features must not
+  add lag to the library or the reader:
+  - nothing heavy on app start or page turn; compute lazily, only when a screen is opened;
+  - aggregate in SQL (`statistics.db`), never load raw events or every book config into JS in a loop;
+  - memoise derived lists; avoid re-rendering the whole bookshelf on unrelated state changes;
+  - no chart libraries — hand-rolled static SVG; no animations, transitions, spinners that redraw e-ink.
 - **E-ink first**: high contrast, no animations/transitions. Use `eink:` / `not-eink:` Tailwind variants and `[data-eink]` styles from `src/styles/globals.css`.
 
 ## Workspace layout (Windows)
