@@ -33,24 +33,30 @@ const VALID_GROUP_BY_TYPES: LibraryGroupByType[] = Object.values(LibraryGroupByT
  *
  * Typed as a total `Record` on purpose: a new status can't be added without
  * also giving it a label here. The stored 'unread' value is the explicit
- * "Want to Read" flag; 'none' is a book with no status and no progress.
+ * "Want to Read" flag; 'library' is every book without one of the three
+ * explicit statuses.
  */
 export const BOOK_STATUS_LABELS: Record<BookStatusCategory, string> = {
   unread: _('Want to Read'),
   reading: _('Reading'),
   finished: _('Finished'),
-  abandoned: _('On hold'),
-  none: _('No status'),
+  library: _('Library'),
 };
 
-const LIBRARY_STATUS_FILTERS: LibraryStatusFilterType[] = [
+/** Filter chips, in display order. */
+export const LIBRARY_STATUS_FILTERS: LibraryStatusFilterType[] = [
   'all',
   'reading',
   'unread',
   'finished',
-  'abandoned',
-  'none',
+  'library',
 ];
+
+/** Persisted filters of removed buckets ("On hold", "No status") now live in Library. */
+const LEGACY_STATUS_FILTERS: Record<string, LibraryStatusFilterType> = {
+  abandoned: 'library',
+  none: 'library',
+};
 
 export { getBookStatusCategory };
 
@@ -61,8 +67,7 @@ export const countBooksByStatus = (books: Book[]): Record<LibraryStatusFilterTyp
     reading: 0,
     unread: 0,
     finished: 0,
-    abandoned: 0,
-    none: 0,
+    library: 0,
   };
   for (const book of books) {
     const status: LibraryStatusFilterType = getBookStatusCategory(book);
@@ -75,8 +80,12 @@ export const countBooksByStatus = (books: Book[]): Record<LibraryStatusFilterTyp
 export const filterBooksByStatus = (books: Book[], filter: LibraryStatusFilterType): Book[] =>
   filter === 'all' ? books : books.filter((book) => getBookStatusCategory(book) === filter);
 
-export const ensureLibraryStatusFilter = (value: string | null | undefined) =>
-  LIBRARY_STATUS_FILTERS.find((filter) => filter === value) ?? 'all';
+export const ensureLibraryStatusFilter = (
+  value: string | null | undefined,
+): LibraryStatusFilterType =>
+  LIBRARY_STATUS_FILTERS.find((filter) => filter === value) ??
+  (value ? LEGACY_STATUS_FILTERS[value] : undefined) ??
+  'all';
 
 /**
  * Safely cast a query parameter to LibrarySortByType with fallback.
@@ -689,12 +698,10 @@ export const createBookGroups = (
     return createValueGroups(
       activeBooks,
       'status',
-      // `readingStatus` is an optional annotation, not a lifecycle field:
-      // nothing stamps it at import, and opening a book *clears* 'unread' back
-      // to `undefined`. So bucket by the derived UI status instead: explicit
-      // statuses as-is, progress without a status as Reading, and the rest as
-      // "No status". Every book lands in exactly one bucket and nothing is
-      // left ungrouped; the buckets match the library status filter.
+      // Bucket by the UI status: the three explicit statuses as-is and
+      // everything else (no status, legacy 'abandoned') as Library. Every book
+      // lands in exactly one bucket and nothing is left ungrouped; the buckets
+      // match the library status filter.
       (book) => [getBookStatusCategory(book)],
       (status) => BOOK_STATUS_LABELS[status as BookStatusCategory] ?? status,
     );
@@ -1072,8 +1079,7 @@ export type BookContextMenuItemId =
   | 'markUnread'
   | 'markReading'
   | 'markFinished'
-  | 'markAbandoned'
-  | 'clearStatus'
+  | 'moveToLibrary'
   | 'showDetails'
   | 'showInFinder'
   | 'searchGoodreads'
@@ -1190,18 +1196,13 @@ const STATUS_MENU_ITEMS: [BookStatusCategory, BookContextMenuItemId][] = [
   ['unread', 'markUnread'],
   ['reading', 'markReading'],
   ['finished', 'markFinished'],
-  ['abandoned', 'markAbandoned'],
+  ['library', 'moveToLibrary'],
 ];
 
-/**
- * Status actions for a book: every "Mark as …" except its current UI status,
- * then "Clear Status" when an explicit status is set.
- */
+/** Status actions for a book: every bucket except its current one. */
 const getStatusMenuItemIds = (book: Book): BookContextMenuItemId[] => {
   const current = getBookStatusCategory(book);
-  const ids = STATUS_MENU_ITEMS.filter(([status]) => status !== current).map(([, id]) => id);
-  if (book.readingStatus) ids.push('clearStatus');
-  return ids;
+  return STATUS_MENU_ITEMS.filter(([status]) => status !== current).map(([, id]) => id);
 };
 
 /**

@@ -31,14 +31,20 @@ interface Figures {
   days: number;
 }
 
+interface BookStatsSectionProps {
+  bookHash: string;
+  /** Owned by the details view, which persists it. */
+  expanded: boolean;
+  onToggle: () => void;
+}
+
 /**
- * Collapsed-by-default reading statistics for one book. statistics.db is only
- * opened when the user expands the section.
+ * Collapsible reading statistics for one book. statistics.db is only opened
+ * while the section is expanded.
  */
-const BookStatsSection: React.FC<{ bookHash: string }> = ({ bookHash }) => {
+const BookStatsSection: React.FC<BookStatsSectionProps> = ({ bookHash, expanded, onToggle }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const [expanded, setExpanded] = useState(false);
   const [figures, setFigures] = useState<Figures | null>(null);
 
   useEffect(() => {
@@ -76,7 +82,7 @@ const BookStatsSection: React.FC<{ bookHash: string }> = ({ bookHash }) => {
         type='button'
         className='flex min-h-11 w-full items-center justify-between rounded-lg px-4 py-3 text-left'
         aria-expanded={expanded}
-        onClick={() => setExpanded((e) => !e)}
+        onClick={onToggle}
       >
         <span className='text-neutral-content/85 text-base font-semibold'>{_('Statistics')}</span>
         {expanded ? <MdExpandLess className='h-5 w-5' /> : <MdExpandMore className='h-5 w-5' />}

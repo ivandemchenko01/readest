@@ -111,20 +111,20 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   // non-null when getBookFileSize could actually open the local copy.
   const hasLocalFile = fileSize !== null;
 
-  const toggleSeriesCollapse = () => {
-    saveSysSettings(envConfig, 'metadataSeriesCollapsed', !settings.metadataSeriesCollapsed);
+  const infoExpanded = !!settings.metadataInfoExpanded;
+  const descriptionExpanded = !!settings.metadataDescriptionExpanded;
+  const statsExpanded = !settings.metadataStatsCollapsed;
+
+  const toggleInfo = () => {
+    saveSysSettings(envConfig, 'metadataInfoExpanded', !infoExpanded);
   };
 
-  const toggleOthersCollapse = () => {
-    saveSysSettings(envConfig, 'metadataOthersCollapsed', !settings.metadataOthersCollapsed);
+  const toggleDescription = () => {
+    saveSysSettings(envConfig, 'metadataDescriptionExpanded', !descriptionExpanded);
   };
 
-  const toggleDescriptionCollapse = () => {
-    saveSysSettings(
-      envConfig,
-      'metadataDescriptionCollapsed',
-      !settings.metadataDescriptionCollapsed,
-    );
+  const toggleStats = () => {
+    saveSysSettings(envConfig, 'metadataStatsCollapsed', statsExpanded);
   };
 
   return (
@@ -275,25 +275,51 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
       <BookStatusSelector book={book} />
 
       <div className='text-base-content my-4'>
+        {onRatingChange && <BookRatingSection book={book} onChange={onRatingChange} />}
+        <div className='metadata-description'>
+          <button
+            type='button'
+            className='flex min-h-11 w-full items-center justify-between rounded-lg px-4 py-3 text-left'
+            aria-expanded={descriptionExpanded}
+            onClick={toggleDescription}
+          >
+            <span className='text-neutral-content/85 text-base font-semibold'>
+              {_('Description')}
+            </span>
+            {descriptionExpanded ? (
+              <MdExpandLess className='h-5 w-5' />
+            ) : (
+              <MdExpandMore className='h-5 w-5' />
+            )}
+          </button>
+          {descriptionExpanded && (
+            <div className='px-4 py-1'>
+              <p
+                className='text-neutral-content prose prose-sm max-w-full whitespace-pre-line text-sm'
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(metadata?.description || _('No description available')),
+                }}
+              ></p>
+            </div>
+          )}
+        </div>
+        <BookStatsSection bookHash={book.hash} expanded={statsExpanded} onToggle={toggleStats} />
         <div className='metadata-others'>
           <button
-            className={clsx(
-              'flex w-full items-center justify-between px-4 py-3 text-left transition-colors',
-              settings.metadataOthersCollapsed ? 'hover:bg-base-200 rounded-lg' : '',
-            )}
-            onClick={toggleOthersCollapse}
+            type='button'
+            className='flex min-h-11 w-full items-center justify-between rounded-lg px-4 py-3 text-left'
+            aria-expanded={infoExpanded}
+            onClick={toggleInfo}
           >
             <span className='text-neutral-content/85 text-base font-semibold'>{_('Metadata')}</span>
-            <div className='transition-transform duration-200'>
-              {settings.metadataOthersCollapsed ? (
-                <MdExpandMore className='h-5 w-5' />
-              ) : (
-                <MdExpandLess className='h-5 w-5' />
-              )}
-            </div>
+            {infoExpanded ? (
+              <MdExpandLess className='h-5 w-5' />
+            ) : (
+              <MdExpandMore className='h-5 w-5' />
+            )}
           </button>
-          {!settings.metadataOthersCollapsed && (
-            <div className='px-4 py-1'>
+          {infoExpanded && (
+            <div className='flex flex-col gap-4 px-4 py-1'>
               <div className='grid grid-cols-2 gap-4 sm:grid-cols-3'>
                 <div className='overflow-hidden'>
                   <span className='font-bold'>{_('Publisher')}</span>
@@ -419,28 +445,6 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-        <div className='metadata-series'>
-          <button
-            className={clsx(
-              'flex w-full items-center justify-between px-4 py-3 text-left transition-colors',
-              settings.metadataSeriesCollapsed ? 'hover:bg-base-200 rounded-lg' : '',
-            )}
-            onClick={toggleSeriesCollapse}
-          >
-            <span className='text-neutral-content/85 text-base font-semibold'>{_('Series')}</span>
-            <div className='transition-transform duration-200'>
-              {settings.metadataSeriesCollapsed ? (
-                <MdExpandMore className='h-5 w-5' />
-              ) : (
-                <MdExpandLess className='h-5 w-5' />
-              )}
-            </div>
-          </button>
-          {!settings.metadataSeriesCollapsed && (
-            <div className='px-4 py-1'>
               <div className='grid grid-cols-2 gap-4 sm:grid-cols-3'>
                 <div className='overflow-hidden sm:col-span-2'>
                   <span className='font-bold'>{_('Series')}</span>
@@ -456,38 +460,6 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </div>
           )}
         </div>
-        {onRatingChange && <BookRatingSection book={book} onChange={onRatingChange} />}
-        <div className='metadata-description'>
-          <button
-            className={clsx(
-              'flex w-full items-center justify-between rounded-lg px-4 py-3 text-left transition-colors',
-              settings.metadataDescriptionCollapsed ? 'hover:bg-base-200' : '',
-            )}
-            onClick={toggleDescriptionCollapse}
-          >
-            <span className='text-neutral-content/85 text-base font-semibold'>
-              {_('Description')}
-            </span>
-            <div className='transition-transform duration-200'>
-              {settings.metadataDescriptionCollapsed ? (
-                <MdExpandMore className='h-5 w-5' />
-              ) : (
-                <MdExpandLess className='h-5 w-5' />
-              )}
-            </div>
-          </button>
-          {!settings.metadataDescriptionCollapsed && (
-            <div className='px-4 py-1'>
-              <p
-                className='text-neutral-content prose prose-sm max-w-full whitespace-pre-line text-sm'
-                dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(metadata?.description || _('No description available')),
-                }}
-              ></p>
-            </div>
-          )}
-        </div>
-        <BookStatsSection bookHash={book.hash} />
       </div>
     </div>
   );

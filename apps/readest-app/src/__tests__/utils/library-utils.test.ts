@@ -299,11 +299,11 @@ describe('createBookGroups', () => {
       const result = createBookGroups([unread, finished, onHold], LibraryGroupByType.Status);
       const groups = result.filter((item): item is BooksGroup => 'books' in item);
 
-      expect(groups.map(({ name }) => name)).toEqual(['unread', 'finished', 'abandoned']);
+      expect(groups.map(({ name }) => name)).toEqual(['unread', 'finished', 'library']);
       expect(groups.map(({ displayName }) => displayName)).toEqual([
         'Want to Read',
         'Finished',
-        'On hold',
+        'Library',
       ]);
       expect(groups.every(({ books }) => books.length > 0)).toBe(true);
     });
@@ -336,13 +336,12 @@ describe('createBookGroups', () => {
           groups.map(({ name, books: b }) => [name, b.map(({ hash }) => hash).sort()]),
         ),
       ).toEqual({
-        // 'unread' is the explicit "Want to Read" flag; a never-opened book
-        // with no flag just sits in the library under "No status".
+        // 'unread' is the explicit "Want to Read" flag; a book without a status
+        // (opened or not) and a legacy "abandoned" one sit in "Library".
         unread: ['marked-unread'],
-        none: ['never-opened'],
-        reading: ['in-progress', 'marked-reading'],
+        library: ['in-progress', 'never-opened', 'parked'],
+        reading: ['marked-reading'],
         finished: ['done'],
-        abandoned: ['parked'],
       });
     });
 
@@ -359,7 +358,7 @@ describe('createBookGroups', () => {
         'Want to Read',
         'Reading',
         'Finished',
-        'On hold',
+        'Library',
       ]);
     });
 
@@ -372,11 +371,9 @@ describe('createBookGroups', () => {
       expect(statusGroups.map(({ localized }) => localized)).toEqual([true]);
     });
 
-    // Opening an 'unread' book clears its status to `undefined` (readerStore),
-    // so the books a user is actually reading carry no explicit status. Without
-    // deriving the bucket they'd all fall out of the grouping as loose items,
-    // which is exactly the shelf #1010 asks for.
-    it('derives the reading group from progress when no status is set', () => {
+    // The reader stamps 'reading' explicitly (after a few page turns), so
+    // progress alone no longer means Reading: a statusless book is in Library.
+    it('puts a statusless book in Library whatever its progress', () => {
       const inProgress = createMockBook({ hash: 'in-progress', progress: [10, 100] });
       const neverOpened = createMockBook({ hash: 'never-opened' });
 
@@ -384,12 +381,9 @@ describe('createBookGroups', () => {
       const groups = result.filter((item): item is BooksGroup => 'books' in item);
 
       expect(groups.map(({ name, displayName }) => [name, displayName])).toEqual([
-        ['reading', 'Reading'],
-        // Never opened and never flagged: no status at all.
-        ['none', 'No status'],
+        ['library', 'Library'],
       ]);
-      expect(groups[0]!.books.map(({ hash }) => hash)).toEqual(['in-progress']);
-      expect(groups[1]!.books.map(({ hash }) => hash)).toEqual(['never-opened']);
+      expect(groups[0]!.books.map(({ hash }) => hash)).toEqual(['in-progress', 'never-opened']);
     });
 
     it('lets an explicit status win over derived reading progress', () => {
@@ -409,7 +403,7 @@ describe('createBookGroups', () => {
         groups.map(({ name, books: grouped }) => [name, grouped.map(({ hash }) => hash)]),
       ).toEqual([
         ['finished', ['finished']],
-        ['abandoned', ['on-hold']],
+        ['library', ['on-hold']],
         ['unread', ['unread']],
         ['reading', ['marked-reading']],
       ]);

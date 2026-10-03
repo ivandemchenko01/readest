@@ -7,7 +7,7 @@ vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => (s: string) => s,
 }));
 
-const counts = { all: 9, reading: 2, unread: 3, finished: 1, abandoned: 0, none: 3 };
+const counts = { all: 9, reading: 2, unread: 3, finished: 1, library: 3 };
 
 afterEach(() => cleanup());
 
@@ -15,12 +15,11 @@ describe('StatusFilterBar', () => {
   it('renders one chip per filter, in order, each with its count', () => {
     render(<StatusFilterBar value='all' counts={counts} onChange={vi.fn()} />);
     expect(screen.getAllByRole('button').map((el) => el.textContent)).toEqual([
-      'All9',
+      'All books9',
       'Reading2',
       'Want to Read3',
       'Finished1',
-      'On hold0',
-      'No status3',
+      'Library3',
     ]);
   });
 

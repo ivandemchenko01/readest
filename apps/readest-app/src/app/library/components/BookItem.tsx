@@ -260,6 +260,16 @@ const BookItem: React.FC<BookItemProps> = ({
             </div>
           )}
           <div className='flex shrink-0 items-center justify-center gap-x-2'>
+            {!!book.rating && (
+              // Plain text glyphs: no icon components or lookups per tile.
+              <span
+                role='img'
+                aria-label={_('Rated {{rating}} out of 5', { rating: book.rating })}
+                className='text-base-content text-[10px] leading-none tracking-tighter'
+              >
+                {'★'.repeat(book.rating)}
+              </span>
+            )}
             {!appService?.isMobile && (
               <button
                 aria-label={_('Show Book Details')}

@@ -1,9 +1,10 @@
 import type { Book, BookNote } from '@/types/book';
 
 // Pure helpers for the reading-statistics screen. Periods are LOCAL calendar
-// weeks (Monday first) and months; the DB stores UTC epoch seconds.
+// weeks (Monday first) and months, or rolling windows of the last 7 / 30 days
+// ending today; the DB stores UTC epoch seconds.
 
-export type StatsPeriodKind = 'week' | 'month';
+export type StatsPeriodKind = 'week' | 'month' | 'last7' | 'last30';
 
 export interface StatsPeriod {
   kind: StatsPeriodKind;
@@ -25,32 +26,38 @@ export const localEpochDay = (date: Date) =>
 
 const daysBetween = (from: Date, to: Date) => localEpochDay(to) - localEpochDay(from);
 
+/** Length in days of the fixed-length kinds (a month varies). */
+const FIXED_DAYS: Record<Exclude<StatsPeriodKind, 'month'>, number> = {
+  week: 7,
+  last7: 7,
+  last30: 30,
+};
+
+const addDays = (date: Date, days: number) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+
 const makePeriod = (kind: StatsPeriodKind, start: Date): StatsPeriod => {
   const end =
-    kind === 'week'
-      ? new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)
-      : new Date(start.getFullYear(), start.getMonth() + 1, 1);
+    kind === 'month'
+      ? new Date(start.getFullYear(), start.getMonth() + 1, 1)
+      : addDays(start, FIXED_DAYS[kind]);
   return { kind, start, end, days: daysBetween(start, end) };
 };
 
 export const getPeriod = (kind: StatsPeriodKind, anchor: Date): StatsPeriod => {
   if (kind === 'month')
     return makePeriod(kind, new Date(anchor.getFullYear(), anchor.getMonth(), 1));
-  const mondayOffset = (anchor.getDay() + 6) % 7;
-  return makePeriod(
-    kind,
-    new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - mondayOffset),
-  );
+  if (kind === 'week') return makePeriod(kind, addDays(anchor, -((anchor.getDay() + 6) % 7)));
+  // Rolling window: ends with the anchor's day, inclusive.
+  return makePeriod(kind, addDays(anchor, 1 - FIXED_DAYS[kind]));
 };
 
+/** Moves a period by whole periods; rolling windows move by their length. */
 export const shiftPeriod = (period: StatsPeriod, delta: number): StatsPeriod => {
-  const { start } = period;
-  return period.kind === 'week'
-    ? makePeriod(
-        'week',
-        new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7 * delta),
-      )
-    : makePeriod('month', new Date(start.getFullYear(), start.getMonth() + delta, 1));
+  const { kind, start } = period;
+  return kind === 'month'
+    ? makePeriod(kind, new Date(start.getFullYear(), start.getMonth() + delta, 1))
+    : makePeriod(kind, addDays(start, FIXED_DAYS[kind] * delta));
 };
 
 export const isCurrentPeriod = (period: StatsPeriod, now: Date) =>
@@ -120,6 +127,18 @@ export const monthDayLabels = (days: number): string[] =>
     const day = i + 1;
     return day === 1 || day === days || (day % 5 === 0 && day <= 25) ? String(day) : '';
   });
+
+/** Keeps every `every`-th label and the last one, dropping a label that would crowd the last. */
+export const sparseLabels = (labels: string[], every: number): string[] => {
+  const last = labels.length - 1;
+  return labels.map((label, i) =>
+    i === last || (i % every === 0 && last - i >= Math.ceil(every / 2)) ? label : '',
+  );
+};
+
+/** Distinct pages per hour of reading, or null below a minute of reading. */
+export const pagesPerHour = (pages: number, secs: number): number | null =>
+  secs >= 60 ? Math.round(pages / (secs / 3600)) : null;
 
 export const finishedInPeriod = (books: Book[], fromMs: number, toMs: number): Book[] =>
   books.filter(

@@ -282,6 +282,12 @@ describe('services/constants', () => {
       expect(typeof DEFAULT_SYSTEM_SETTINGS.metadataDescriptionCollapsed).toBe('boolean');
     });
 
+    it('opens book details with only Statistics expanded', () => {
+      expect(DEFAULT_SYSTEM_SETTINGS.metadataDescriptionExpanded).toBe(false);
+      expect(DEFAULT_SYSTEM_SETTINGS.metadataInfoExpanded).toBe(false);
+      expect(DEFAULT_SYSTEM_SETTINGS.metadataStatsCollapsed).toBe(false);
+    });
+
     it('has nested settings objects', () => {
       expect(DEFAULT_SYSTEM_SETTINGS.kosync).toBeDefined();
       expect(DEFAULT_SYSTEM_SETTINGS.readwise).toBeDefined();

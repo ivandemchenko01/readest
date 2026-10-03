@@ -28,15 +28,23 @@ const books = [
 ];
 
 describe('getBookStatusCategory', () => {
-  it('maps every book to exactly one UI status', () => {
+  it('maps every book to exactly one of the four UI buckets', () => {
     expect(Object.fromEntries(books.map((b) => [b.hash, getBookStatusCategory(b)]))).toEqual({
-      'never-opened': 'none',
+      'never-opened': 'library',
       want: 'unread',
-      'in-progress': 'reading',
+      'in-progress': 'library',
       'marked-reading': 'reading',
       done: 'finished',
-      parked: 'abandoned',
+      parked: 'library',
     });
+  });
+
+  it('never derives Reading from progress alone', () => {
+    expect(getBookStatusCategory(createBook({ progress: [99, 100] }))).toBe('library');
+  });
+
+  it('shows the legacy "abandoned" status as Library', () => {
+    expect(getBookStatusCategory(createBook({ readingStatus: 'abandoned' }))).toBe('library');
   });
 
   it('lets an explicit want-to-read flag win over leftover progress', () => {
@@ -47,14 +55,13 @@ describe('getBookStatusCategory', () => {
 });
 
 describe('countBooksByStatus', () => {
-  it('counts every status plus the total in one pass', () => {
+  it('counts every bucket plus the total in one pass', () => {
     expect(countBooksByStatus(books)).toEqual({
       all: 6,
-      reading: 2,
+      reading: 1,
       unread: 1,
       finished: 1,
-      abandoned: 1,
-      none: 1,
+      library: 3,
     });
   });
 
@@ -64,8 +71,7 @@ describe('countBooksByStatus', () => {
       reading: 0,
       unread: 0,
       finished: 0,
-      abandoned: 0,
-      none: 0,
+      library: 0,
     });
   });
 });
@@ -75,12 +81,13 @@ describe('filterBooksByStatus', () => {
     expect(filterBooksByStatus(books, 'all')).toBe(books);
   });
 
-  it('keeps only the books of the chosen status', () => {
-    expect(filterBooksByStatus(books, 'reading').map((b) => b.hash)).toEqual([
+  it('keeps only the books of the chosen bucket', () => {
+    expect(filterBooksByStatus(books, 'reading').map((b) => b.hash)).toEqual(['marked-reading']);
+    expect(filterBooksByStatus(books, 'library').map((b) => b.hash)).toEqual([
+      'never-opened',
       'in-progress',
-      'marked-reading',
+      'parked',
     ]);
-    expect(filterBooksByStatus(books, 'none').map((b) => b.hash)).toEqual(['never-opened']);
     expect(filterBooksByStatus(books, 'unread').map((b) => b.hash)).toEqual(['want']);
   });
 });
@@ -88,8 +95,13 @@ describe('filterBooksByStatus', () => {
 describe('ensureLibraryStatusFilter', () => {
   it('accepts known filters and falls back to "all" otherwise', () => {
     expect(ensureLibraryStatusFilter('finished')).toBe('finished');
-    expect(ensureLibraryStatusFilter('none')).toBe('none');
+    expect(ensureLibraryStatusFilter('library')).toBe('library');
     expect(ensureLibraryStatusFilter('bogus')).toBe('all');
     expect(ensureLibraryStatusFilter(undefined)).toBe('all');
+  });
+
+  it('migrates the removed "On hold" and "No status" filters to Library', () => {
+    expect(ensureLibraryStatusFilter('abandoned')).toBe('library');
+    expect(ensureLibraryStatusFilter('none')).toBe('library');
   });
 });

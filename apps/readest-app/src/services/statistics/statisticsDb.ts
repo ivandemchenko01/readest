@@ -31,6 +31,27 @@ export interface BookSummary {
   pages: number;
 }
 
+export interface StatBookEntry {
+  md5: string;
+  title: string;
+  lastRead: number; // epoch secs
+}
+
+export interface DayPages {
+  day: number;
+  pages: number;
+}
+
+export interface SessionStats {
+  sessions: number;
+  secs: number;
+}
+
+export interface Streaks {
+  current: number;
+  longest: number;
+}
+
 export interface ManualSession {
   id: number;
   startTime: number;
@@ -41,6 +62,11 @@ export interface ManualSession {
 // Restricts `page_stat_data p` to one book by md5. The id_book lookup uses the
 // UNIQUE(id_book, page, start_time) index.
 const BOOK_FILTER = 'AND p.id_book = (SELECT id FROM book WHERE md5 = ? LIMIT 1)';
+
+// Session detection looks back at most this far past the gap for an earlier
+// event still running (bounds the per-event index range; only a backfilled
+// event longer than an hour can be cut short by it).
+const SESSION_LOOKBACK_CAP_SECS = 3600;
 
 // Readest caps one page visit at this, so a longer event spans several pages
 // (a CrossPoint session recorded in whole percents) and says nothing about pace.
@@ -312,6 +338,117 @@ export class StatisticsDb {
       lastRead: Number(r.last),
       pages: Number(r.pages),
     };
+  }
+
+  /** Books with any reading time, most recently read first (book table only). */
+  async getBooksWithStats(): Promise<StatBookEntry[]> {
+    const rows = await this.db.select<{ md5: string; title: string; last_open: number }>(
+      `SELECT md5, title, last_open FROM book
+       WHERE total_read_time > 0 AND md5 IS NOT NULL ORDER BY last_open DESC`,
+    );
+    return rows.map((r) => ({
+      md5: String(r.md5),
+      title: String(r.title ?? ''),
+      lastRead: Number(r.last_open ?? 0),
+    }));
+  }
+
+  /** Distinct (book, page) pairs read per LOCAL day in [fromSec, toSec). */
+  async getDailyPages(
+    fromSec: number,
+    toSec: number,
+    tzOffsetSecs: number,
+    md5?: string,
+  ): Promise<DayPages[]> {
+    const rows = await this.db.select<{ day: number; pages: number }>(
+      `SELECT day, COUNT(*) AS pages FROM (
+         SELECT DISTINCT (p.start_time + ?) / 86400 AS day, p.id_book, p.page
+         FROM page_stat_data p
+         WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}
+       ) GROUP BY day ORDER BY day`,
+      md5 ? [tzOffsetSecs, fromSec, toSec, md5] : [tzOffsetSecs, fromSec, toSec],
+    );
+    return rows.map((r) => ({ day: Number(r.day), pages: Number(r.pages) }));
+  }
+
+  /**
+   * Reading sessions in [fromSec, toSec): an event starts a session when no
+   * earlier event of the period (any book, or the given book) ended within
+   * `gapSecs` before it. Turso has no LAG(), so this is a correlated NOT EXISTS
+   * over the start_time index, bounded by the longest event in the period.
+   * `secs` is the total reading time, so avg session = secs / sessions.
+   */
+  async getSessionStats(
+    fromSec: number,
+    toSec: number,
+    gapSecs: number,
+    md5?: string,
+  ): Promise<SessionStats> {
+    const [totals] = await this.db.select<{ secs: number | null; longest: number | null }>(
+      `SELECT SUM(p.duration) AS secs, MAX(p.duration) AS longest
+       FROM page_stat_data p
+       WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}`,
+      md5 ? [fromSec, toSec, md5] : [fromSec, toSec],
+    );
+    if (totals?.longest == null) return { sessions: 0, secs: 0 };
+    const secs = Number(totals.secs ?? 0);
+    const lookback = gapSecs + Math.min(Number(totals.longest), SESSION_LOOKBACK_CAP_SECS);
+    const [row] = await this.db.select<{ sessions: number }>(
+      `SELECT COUNT(*) AS sessions FROM page_stat_data p
+       WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}
+         AND NOT EXISTS (
+           SELECT 1 FROM page_stat_data y
+           WHERE y.start_time >= ? AND y.start_time >= p.start_time - ?
+             AND y.start_time <= p.start_time
+             ${md5 ? 'AND y.id_book = p.id_book' : ''}
+             AND (y.start_time < p.start_time OR y.id_book < p.id_book
+                  OR (y.id_book = p.id_book AND y.page < p.page))
+             AND y.start_time + y.duration >= p.start_time - ?)`,
+      md5
+        ? [fromSec, toSec, md5, fromSec, lookback, gapSecs]
+        : [fromSec, toSec, fromSec, lookback, gapSecs],
+    );
+    return { sessions: Number(row?.sessions ?? 0), secs };
+  }
+
+  /**
+   * All-time daily streaks (gaps-and-islands over distinct local days). The
+   * current streak is the run ending today or yesterday (today is not over).
+   */
+  async getStreaks(todayDay: number, tzOffsetSecs: number, md5?: string): Promise<Streaks> {
+    const [row] = await this.db.select<{ longest: number | null; current: number | null }>(
+      `WITH d AS (SELECT DISTINCT (p.start_time + ?) / 86400 AS day
+                  FROM page_stat_data p WHERE 1 = 1 ${md5 ? BOOK_FILTER : ''}),
+            g AS (SELECT day - ROW_NUMBER() OVER (ORDER BY day) AS grp, day FROM d),
+            i AS (SELECT COUNT(*) AS len, MAX(day) AS last FROM g GROUP BY grp)
+       SELECT MAX(len) AS longest,
+              (SELECT len FROM i WHERE last >= ? ORDER BY last DESC LIMIT 1) AS current
+       FROM i`,
+      md5 ? [tzOffsetSecs, md5, todayDay - 1] : [tzOffsetSecs, todayDay - 1],
+    );
+    return { current: Number(row?.current ?? 0), longest: Number(row?.longest ?? 0) };
+  }
+
+  /** Seconds read per LOCAL hour of day (by event start) in [fromSec, toSec); 24 slots. */
+  async getHourlyReadingSecs(
+    fromSec: number,
+    toSec: number,
+    tzOffsetSecs: number,
+    md5?: string,
+  ): Promise<number[]> {
+    const rows = await this.db.select<{ hour: number; secs: number }>(
+      `SELECT ((p.start_time + ?) % 86400) / 3600 AS hour, SUM(p.duration) AS secs
+       FROM page_stat_data p
+       WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}
+       GROUP BY hour`,
+      md5 ? [tzOffsetSecs, fromSec, toSec, md5] : [tzOffsetSecs, fromSec, toSec],
+    );
+    const hours = new Array<number>(24).fill(0);
+    for (const r of rows) {
+      const h = Number(r.hour);
+      if (h >= 0 && h < 24) hours[h] = Number(r.secs);
+    }
+    return hours;
   }
 
   /**

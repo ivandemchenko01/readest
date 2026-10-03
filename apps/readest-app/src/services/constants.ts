@@ -245,6 +245,9 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   metadataSeriesCollapsed: false,
   metadataOthersCollapsed: false,
   metadataDescriptionCollapsed: false,
+  metadataDescriptionExpanded: false,
+  metadataInfoExpanded: false,
+  metadataStatsCollapsed: false,
 
   pinCodeEnabled: false,
 

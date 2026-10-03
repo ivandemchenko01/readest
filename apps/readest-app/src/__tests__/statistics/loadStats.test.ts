@@ -6,8 +6,10 @@ import { StatisticsDb } from '@/services/statistics/statisticsDb';
 import { getPeriod, toEpochSecs } from '@/utils/readingStats';
 import {
   loadAllTimeMonths,
+  loadDailyPages,
   loadPeriodStats,
   loadTodaySecs,
+  periodRange,
 } from '@/app/statistics/utils/loadStats';
 
 const at = (y: number, m: number, d: number, h = 12) => toEpochSecs(new Date(y, m - 1, d, h));
@@ -54,5 +56,53 @@ describe('loadPeriodStats', () => {
       { year: 2026, month: 8, secs: 7200 },
       { year: 2026, month: 9, secs: 1200 },
     ]);
+  });
+
+  it('compares a rolling 7-day window with the 7 days before it', async () => {
+    const now = new Date(2026, 9, 2, 18);
+    // Sep 26 – Oct 2 vs Sep 19 – Sep 25.
+    await stats.insertPageEvent(id, {
+      page: 6,
+      startTime: at(2026, 9, 26),
+      duration: 60,
+      totalPages: 10,
+    });
+    await stats.insertPageEvent(id, {
+      page: 7,
+      startTime: at(2026, 9, 25),
+      duration: 6,
+      totalPages: 10,
+    });
+    const result = await loadPeriodStats(stats, getPeriod('last7', now), now);
+    expect(result.elapsed).toBe(7);
+    expect(result.daily).toEqual([60, 0, 0, 0, 0, 300, 900]);
+    expect(result.totalSecs).toBe(1260);
+    expect(result.prevSecs).toBe(6006); // Sep 20 (6000) + Sep 25 (6)
+  });
+
+  it('counts pages per day of the period, null after today', async () => {
+    const now = new Date(2026, 9, 2, 18);
+    await stats.insertPageEvent(id, {
+      page: 4,
+      startTime: at(2026, 10, 2, 13),
+      duration: 60,
+      totalPages: 10,
+    });
+    const pages = await loadDailyPages(stats, getPeriod('week', now), now);
+    // Week of Mon Sep 28: Oct 1 (Thu) page 4; Oct 2 (Fri) pages 5 and 4.
+    expect(pages).toEqual([0, 0, 0, 1, 2, null, null]);
+  });
+
+  it('spans all time up to the end of today without a period', () => {
+    const now = new Date(2026, 9, 2, 18);
+    expect(periodRange(null, now)).toEqual({
+      from: 0,
+      to: toEpochSecs(new Date(2026, 9, 3)),
+    });
+    const week = getPeriod('week', now);
+    expect(periodRange(week, now)).toEqual({
+      from: toEpochSecs(week.start),
+      to: toEpochSecs(week.end),
+    });
   });
 });

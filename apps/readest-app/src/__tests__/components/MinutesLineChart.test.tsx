@@ -13,9 +13,24 @@ describe('MinutesLineChart', () => {
         describe={(i) => `day ${i}`}
       />,
     );
-    const points = container.querySelector('polyline')!.getAttribute('points')!.trim().split(' ');
-    expect(points).toHaveLength(3);
+    const line = container.querySelector('path')!;
+    // Move + one cubic segment per following known point.
+    expect(line.getAttribute('d')!.match(/C/g)).toHaveLength(2);
+    expect(line.getAttribute('stroke-width')).toBe('1.5');
     expect(container.querySelectorAll('circle')).toHaveLength(3);
+  });
+
+  it('renders without a describe callback', () => {
+    const { container } = render(<MinutesLineChart values={[1, 2, 3]} labels={['a', 'b', 'c']} />);
+    expect(container.querySelectorAll('circle')).toHaveLength(3);
+  });
+
+  it('anchors the last x label at its end so it stays inside the chart', () => {
+    const { getByText } = render(
+      <MinutesLineChart values={[1, 2, 3]} labels={['a', '', 'Today']} describe={() => ''} />,
+    );
+    expect(getByText('Today').getAttribute('text-anchor')).toBe('end');
+    expect(getByText('a').getAttribute('text-anchor')).toBe('middle');
   });
 
   it('labels the y axis with a nice maximum and its half', () => {

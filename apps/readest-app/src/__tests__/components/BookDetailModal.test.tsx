@@ -32,9 +32,10 @@ vi.mock('@/store/themeStore', () => ({
 vi.mock('@/store/settingsStore', () => ({
   useSettingsStore: () => ({
     settings: {
-      metadataSeriesCollapsed: true,
-      metadataOthersCollapsed: true,
-      metadataDescriptionCollapsed: true,
+      metadataInfoExpanded: false,
+      metadataDescriptionExpanded: false,
+      // The Statistics section needs the app router (its "More" link).
+      metadataStatsCollapsed: true,
     },
   }),
 }));

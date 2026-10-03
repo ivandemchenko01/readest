@@ -4,6 +4,7 @@ import { render, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { Book } from '@/types/book';
 import BookDetailView from '@/components/metadata/BookDetailView';
 import { DropdownProvider } from '@/context/DropdownContext';
+import { saveSysSettings } from '@/helpers/settings';
 
 const mocks = vi.hoisted(() => ({
   toDataUrl: vi.fn(async (url: string) => `data:image/png;base64,${url}`),
@@ -16,11 +17,11 @@ vi.mock('@/hooks/useTranslation', () => ({
 vi.mock('@/store/settingsStore', () => {
   const state = {
     settings: {
-      metadataSeriesCollapsed: true,
       // The "File Path" entry lives under the Metadata section; tests below
-      // depend on it being expanded by default so the row is in the DOM.
-      metadataOthersCollapsed: false,
-      metadataDescriptionCollapsed: false,
+      // depend on it being expanded so the row is in the DOM.
+      metadataInfoExpanded: true,
+      metadataDescriptionExpanded: true,
+      metadataStatsCollapsed: false,
       libraryHideCovers: false,
     },
   };
@@ -48,6 +49,10 @@ vi.mock('@/libs/document', () => ({
 
 vi.mock('@/helpers/settings', () => ({
   saveSysSettings: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock('@/utils/open', () => ({
@@ -342,9 +347,46 @@ describe('BookDetailView untrusted description', () => {
 });
 
 describe('BookDetailView statistics section', () => {
-  it('shows a collapsed Statistics section after the description', () => {
+  it('shows the Statistics section expanded unless the user collapsed it', () => {
     const { getByRole } = renderView();
     const toggle = getByRole('button', { name: 'Statistics' });
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('persists collapsing the Statistics section', () => {
+    const { getByRole } = renderView();
+    fireEvent.click(getByRole('button', { name: 'Statistics' }));
+    expect(vi.mocked(saveSysSettings)).toHaveBeenCalledWith({}, 'metadataStatsCollapsed', true);
+  });
+});
+
+describe('BookDetailView section order', () => {
+  it('lists status, rating, description, statistics, then metadata and series', () => {
+    const { getByRole, getByText } = renderView({ onRatingChange: vi.fn() });
+    const order = [
+      getByRole('group', { name: 'Reading status' }),
+      getByText('Rating'),
+      getByRole('button', { name: 'Description' }),
+      getByRole('button', { name: 'Statistics' }),
+      getByRole('button', { name: 'Metadata' }),
+      getByText('Series Index'),
+    ];
+    for (let i = 1; i < order.length; i++) {
+      expect(
+        order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
+  it('persists the Description and Metadata toggles under their own keys', () => {
+    const { getByRole } = renderView();
+    fireEvent.click(getByRole('button', { name: 'Description' }));
+    expect(vi.mocked(saveSysSettings)).toHaveBeenCalledWith(
+      {},
+      'metadataDescriptionExpanded',
+      false,
+    );
+    fireEvent.click(getByRole('button', { name: 'Metadata' }));
+    expect(vi.mocked(saveSysSettings)).toHaveBeenCalledWith({}, 'metadataInfoExpanded', false);
   });
 });

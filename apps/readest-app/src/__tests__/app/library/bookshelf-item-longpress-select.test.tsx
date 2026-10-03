@@ -143,7 +143,6 @@ describe('long-press on a book on mobile opens the in-app action menu', () => {
       'Mark as Want to Read',
       'Mark as Reading',
       'Mark as Finished',
-      'Mark as On hold',
       'Details',
       'Select',
     ]);
@@ -156,7 +155,7 @@ describe('long-press on a book on mobile opens the in-app action menu', () => {
 
     fireEvent.pointerDown(item, { pointerId: 1, clientX: 50, clientY: 50 });
     act(() => void vi.advanceTimersByTime(500));
-    expect(screen.getAllByRole('menuitem')).toHaveLength(6);
+    expect(screen.getAllByRole('menuitem')).toHaveLength(5);
 
     // The WebView's native long-press callout lands a moment later.
     fireEvent.contextMenu(item, { clientX: 50, clientY: 50 });
@@ -164,7 +163,7 @@ describe('long-press on a book on mobile opens the in-app action menu', () => {
     fireEvent.pointerUp(item, { pointerId: 1, clientX: 50, clientY: 50 });
     act(() => void vi.advanceTimersByTime(500));
 
-    expect(screen.getAllByRole('menuitem')).toHaveLength(6);
+    expect(screen.getAllByRole('menuitem')).toHaveLength(5);
     expect(onToggle).not.toHaveBeenCalled();
   });
 

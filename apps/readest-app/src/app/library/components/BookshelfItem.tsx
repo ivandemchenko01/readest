@@ -26,6 +26,7 @@ import BookItem from './BookItem';
 import GroupItem from './GroupItem';
 import BookContextMenuPopup, { type BookContextMenuItem } from './BookContextMenuPopup';
 import { useOpenBook } from '../hooks/useOpenBook';
+import { requestFinishPrompt } from '@/store/finishPromptStore';
 
 // A native popup blocks Tauri's main thread until the menu is dismissed and
 // holds the webview's resources table lock for that whole time, while
@@ -205,16 +206,12 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         text: _('Mark as Finished'),
         action: async () => {
           handleUpdateReadingStatus(book, 'finished');
+          // Single book only: ask for a rating (bulk status edits never do).
+          requestFinishPrompt(book.hash, 'finished');
         },
       },
-      markAbandoned: {
-        text: _('Mark as On hold'),
-        action: async () => {
-          handleUpdateReadingStatus(book, 'abandoned');
-        },
-      },
-      clearStatus: {
-        text: _('Clear Status'),
+      moveToLibrary: {
+        text: _('Move to Library'),
         action: async () => {
           handleUpdateReadingStatus(book, undefined);
         },

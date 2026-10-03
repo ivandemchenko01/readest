@@ -31,6 +31,7 @@ import {
 import { clearDiscordPresence } from '@/utils/discord';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import { BookDetailModal } from '@/components/metadata';
+import FinishPromptHost from '@/components/metadata/FinishPromptHost';
 import ShareBookDialog from '@/app/library/components/ShareBookDialog';
 import { useAuth } from '@/context/AuthContext';
 import { useNotebookDocumentStore } from '@/store/notebookDocumentStore';
@@ -443,6 +444,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
           onClose={() => setShowDetailsBook(null)}
         />
       )}
+      <FinishPromptHost immediateOnly />
       <ShareBookDialog
         isOpen={!!shareDialogState}
         book={shareDialogState?.book ?? null}

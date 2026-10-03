@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Book } from '@/types/book';
 import { getBookWithUpdatedMetadata } from '@/utils/book';
@@ -78,6 +78,14 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   // save, so the details view tracks the saved book locally to refresh its
   // cover/title/author immediately (otherwise it shows the stale prop).
   const [displayBook, setDisplayBook] = useState<Book>(book);
+  // The finish prompt can rate the book while this dialog is open: show the
+  // stored rating/review rather than the local copy's.
+  const liveBook = useLibraryStore((state) => state.getBookByHash(book.hash));
+  const viewBook = useMemo(
+    () =>
+      liveBook ? { ...displayBook, rating: liveBook.rating, review: liveBook.review } : displayBook,
+    [displayBook, liveBook],
+  );
 
   // Initialize metadata edit hook
   const {
@@ -299,7 +307,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
               />
             ) : (
               <BookDetailView
-                book={displayBook}
+                book={viewBook}
                 metadata={bookMeta}
                 fileSize={fileSize}
                 shareEnabled={shareEnabled}

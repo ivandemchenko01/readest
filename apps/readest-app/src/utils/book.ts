@@ -440,8 +440,8 @@ export const getCurrentPage = (book: Book, progress: BookProgress) => {
  * opening it does), so the progress gate drops freshly-added-but-unopened
  * books; the status gate drops finished, abandoned (on hold) and
  * manually-marked-unread books. A book actively being read has `readingStatus`
- * either `undefined` (cleared from 'unread' on first open) or `'reading'`, both
- * of which pass. Shared by the library's recently-read shelf and the
+ * either `undefined` (opened, fewer than three page turns so far) or
+ * `'reading'`, both of which pass. Shared by the library's recently-read shelf and the
  * home-screen bookshelf widget so the two surfaces stay in sync.
  */
 export const isCurrentlyReadingBook = (book: Book): boolean =>
@@ -452,12 +452,14 @@ export const isCurrentlyReadingBook = (book: Book): boolean =>
   book.readingStatus !== 'unread';
 
 /**
- * Resolve a book's UI status. An explicit `readingStatus` wins; otherwise a
- * book with reading progress counts as Reading (opening an 'unread' book clears
- * the flag to `undefined`) and a never-opened one has no status ('none').
+ * Resolve a book's UI bucket from its explicit `readingStatus` only: progress
+ * never makes a book Reading (the reader stamps 'reading' itself after a few
+ * page turns). No status and the legacy 'abandoned' value both mean Library.
  */
-export const getBookStatusCategory = (book: Book): BookStatusCategory =>
-  book.readingStatus ?? (book.progress != null ? 'reading' : 'none');
+export const getBookStatusCategory = (book: Book): BookStatusCategory => {
+  const status = book.readingStatus;
+  return status === 'unread' || status === 'reading' || status === 'finished' ? status : 'library';
+};
 
 export const getBookDirFromWritingMode = (writingMode: WritingMode) => {
   switch (writingMode) {

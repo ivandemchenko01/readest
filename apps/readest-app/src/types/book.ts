@@ -26,8 +26,12 @@ export type BookFormat =
   | 'BOOKORBIT';
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt' | 'notebook';
 export type ReadingStatus = 'unread' | 'reading' | 'finished' | 'abandoned';
-/** A book's status as the UI shows it: an explicit status, or 'none' (no status, no progress). */
-export type BookStatusCategory = ReadingStatus | 'none';
+/**
+ * The four buckets the UI shows: Reading, Want to Read ('unread'), Finished,
+ * and Library for everything else (no status, or the legacy 'abandoned' value
+ * that stays valid in storage for sync compatibility).
+ */
+export type BookStatusCategory = 'unread' | 'reading' | 'finished' | 'library';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
 // Predefined highlight colors, can be extended with custom hex colors
 export type HighlightColor = 'red' | 'yellow' | 'green' | 'blue' | 'violet' | string;

@@ -9,9 +9,11 @@ import {
   localEpochDay,
   monthDayLabels,
   niceAxisMax,
+  pagesPerHour,
   percentChange,
   rollUpByMonth,
   shiftPeriod,
+  sparseLabels,
   splitManualSession,
   zeroFill,
 } from '@/utils/readingStats';
@@ -232,5 +234,66 @@ describe('splitManualSession', () => {
     expect(splitManualSession({ startTime: 5, durationSecs: 600, pages: 0, firstPage: 2 })).toEqual(
       [{ page: 2, startTime: 5, duration: 600 }],
     );
+  });
+});
+
+describe('rolling windows (last7 / last30)', () => {
+  it('ends today (inclusive) and spans n days', () => {
+    const now = d(2026, 10, 3, 15);
+    const p = getPeriod('last7', now);
+    expect(p.start).toEqual(d(2026, 9, 27));
+    expect(p.end).toEqual(d(2026, 10, 4));
+    expect(p.days).toBe(7);
+    const m = getPeriod('last30', now);
+    expect(m.start).toEqual(d(2026, 9, 4));
+    expect(m.end).toEqual(d(2026, 10, 4));
+    expect(m.days).toBe(30);
+  });
+
+  it('shifts by its own length and knows the current window', () => {
+    const now = d(2026, 10, 3, 15);
+    const prev = shiftPeriod(getPeriod('last7', now), -1);
+    expect(prev.start).toEqual(d(2026, 9, 20));
+    expect(prev.end).toEqual(d(2026, 9, 27));
+    expect(isCurrentPeriod(prev, now)).toBe(false);
+    expect(isCurrentPeriod(getPeriod('last30', now), now)).toBe(true);
+    expect(shiftPeriod(getPeriod('last30', now), -1).end).toEqual(d(2026, 9, 4));
+  });
+
+  it('counts every day of the current window as elapsed', () => {
+    const now = d(2026, 10, 3, 9);
+    expect(elapsedDays(getPeriod('last7', now), now)).toBe(7);
+    expect(elapsedDays(getPeriod('last30', now), now)).toBe(30);
+  });
+});
+
+describe('sparseLabels', () => {
+  it('keeps every nth label and the last one', () => {
+    const labels = Array.from({ length: 30 }, (_, i) => String(i + 1));
+    expect(sparseLabels(labels, 5).filter(Boolean)).toEqual([
+      '1',
+      '6',
+      '11',
+      '16',
+      '21',
+      '26',
+      '30',
+    ]);
+  });
+
+  it('drops an nth label that would crowd the last one', () => {
+    const labels = Array.from({ length: 12 }, (_, i) => String(i));
+    expect(sparseLabels(labels, 5).filter(Boolean)).toEqual(['0', '5', '11']);
+  });
+});
+
+describe('pagesPerHour', () => {
+  it('rounds distinct pages over reading hours', () => {
+    expect(pagesPerHour(30, 1800)).toBe(60);
+    expect(pagesPerHour(10, 3600 * 3)).toBe(3);
+  });
+
+  it('returns null below a minute of reading', () => {
+    expect(pagesPerHour(5, 59)).toBeNull();
   });
 });

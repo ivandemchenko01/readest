@@ -1,5 +1,5 @@
 import type { TranslationFunc } from '@/hooks/useTranslation';
-import type { StatsPeriod } from '@/utils/readingStats';
+import { type StatsPeriod, sparseLabels } from '@/utils/readingStats';
 
 export const PLACEHOLDER = '—';
 
@@ -35,3 +35,20 @@ export const formatMonth = (year: number, month: number, locale: string) =>
   new Intl.DateTimeFormat(locale, { month: 'short', year: '2-digit' }).format(
     new Date(year, month, 1),
   );
+
+/**
+ * X labels of a rolling window: weekday names for 7 days, every 5th day number
+ * for 30 days. The last label reads `todayLabel` when the window ends today.
+ */
+export const rollingDayLabels = (period: StatsPeriod, locale: string, todayLabel?: string) => {
+  const { start } = period;
+  const fmt = new Intl.DateTimeFormat(
+    locale,
+    period.days <= 7 ? { weekday: 'short' } : { day: 'numeric' },
+  );
+  const labels = Array.from({ length: period.days }, (_, i) =>
+    fmt.format(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)),
+  );
+  if (todayLabel) labels[labels.length - 1] = todayLabel;
+  return period.days <= 7 ? labels : sparseLabels(labels, 5);
+};

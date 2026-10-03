@@ -2,20 +2,11 @@ import clsx from 'clsx';
 import { memo } from 'react';
 import type { LibraryStatusFilterType } from '@/types/settings';
 import { useTranslation } from '@/hooks/useTranslation';
-import { BOOK_STATUS_LABELS } from '../utils/libraryUtils';
+import { BOOK_STATUS_LABELS, LIBRARY_STATUS_FILTERS } from '../utils/libraryUtils';
 import { stubTranslation } from '@/utils/misc';
 
-const FILTERS: LibraryStatusFilterType[] = [
-  'all',
-  'reading',
-  'unread',
-  'finished',
-  'abandoned',
-  'none',
-];
-
 const FILTER_LABELS: Record<LibraryStatusFilterType, string> = {
-  all: stubTranslation('All'),
+  all: stubTranslation('All books'),
   ...BOOK_STATUS_LABELS,
 };
 
@@ -38,7 +29,7 @@ const StatusFilterBar: React.FC<StatusFilterBarProps> = ({ value, counts, onChan
       aria-label={_('Reading status')}
       className='no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 pb-2 sm:px-6'
     >
-      {FILTERS.map((filter) => {
+      {LIBRARY_STATUS_FILTERS.map((filter) => {
         const active = filter === value;
         return (
           <button

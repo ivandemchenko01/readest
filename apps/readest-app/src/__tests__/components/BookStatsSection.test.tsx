@@ -20,7 +20,15 @@ vi.mock('@/services/statistics/statisticsDb', () => ({
   StatisticsDb: { open: mocks.open },
 }));
 
+import { useState } from 'react';
 import BookStatsSection from '@/components/metadata/BookStatsSection';
+
+const Harness = ({ initial = false }: { initial?: boolean }) => {
+  const [expanded, setExpanded] = useState(initial);
+  return (
+    <BookStatsSection bookHash='h1' expanded={expanded} onToggle={() => setExpanded((e) => !e)} />
+  );
+};
 
 afterEach(() => {
   cleanup();
@@ -29,7 +37,7 @@ afterEach(() => {
 
 describe('BookStatsSection', () => {
   it('does not open the statistics DB while collapsed', () => {
-    render(<BookStatsSection bookHash='h1' />);
+    render(<Harness />);
     expect(mocks.open).not.toHaveBeenCalled();
   });
 
@@ -44,7 +52,7 @@ describe('BookStatsSection', () => {
         pages: 10,
       }),
     });
-    const { getByText } = render(<BookStatsSection bookHash='h1' />);
+    const { getByText } = render(<Harness />);
     fireEvent.click(getByText('Statistics'));
     await waitFor(() => expect(getByText('4')).toBeTruthy());
     expect(getByText('{{hours}}h {{minutes}}m:{"hours":1,"minutes":5}')).toBeTruthy();

@@ -31,6 +31,13 @@ import { BookData, useBookDataStore } from './bookDataStore';
 import { useLibraryStore } from './libraryStore';
 import { clearBookProgress, getBookProgress, setBookProgress } from './readerProgressStore';
 import { uniqueId } from '@/utils/misc';
+import {
+  getCloseFinishPrompt,
+  nextAutoReadingStatus,
+  nextPageTurnState,
+  type PageTurnState,
+} from '@/utils/readingSession';
+import { requestFinishPrompt, useFinishPromptStore } from './finishPromptStore';
 import { getWidePages, type WidePagesOptions } from '@/utils/spread';
 
 interface ViewState {
@@ -116,6 +123,9 @@ interface ReaderStore {
   recreateViewer: (envConfig: EnvConfigType, key: string) => void;
 }
 
+// Page turns of the current reading session, per open view (in memory only).
+const pageTurns = new Map<string, PageTurnState>();
+
 export const useReaderStore = create<ReaderStore>((set, get) => ({
   viewStates: {},
   bookKeys: [],
@@ -144,6 +154,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     // Drop the per-book progress entry alongside the view state so the
     // standalone progress store doesn't leak across opens/closes.
     clearBookProgress(key);
+    pageTurns.delete(key);
     set((state) => {
       const viewStates = { ...state.viewStates };
       delete viewStates[key];
@@ -157,6 +168,11 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     if (Object.keys(get().viewStates).some((k) => k.split('-')[0] === id)) return;
     const book = useLibraryStore.getState().getBookByHash(id);
     if (book && isAbsEbook(book)) useBookDataStore.getState().clearBookData(id);
+    // Closed at 95%+ without being finished: ask once the library shows.
+    const closePrompt = book && getCloseFinishPrompt(book);
+    if (closePrompt && useFinishPromptStore.getState().pending?.bookHash !== id) {
+      requestFinishPrompt(id, closePrompt, true);
+    }
   },
   getViewState: (key: string) => get().viewStates[key] || null,
   initViewState: async (
@@ -457,12 +473,15 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     const { getBookByHash, updateBookProgress } = useLibraryStore.getState();
     const existingBook = getBookByHash(id);
     if (existingBook) {
-      let newReadingStatus = existingBook.readingStatus;
-      if (existingBook.readingStatus === 'unread') {
-        newReadingStatus = undefined;
-      }
-      if (progressPercentage >= 100 && existingBook.readingStatus !== 'finished') {
-        newReadingStatus = 'finished';
+      const session = nextPageTurnState(pageTurns.get(key), progress[0]);
+      pageTurns.set(key, session);
+      const newReadingStatus = nextAutoReadingStatus(
+        existingBook.readingStatus,
+        session.turns,
+        progressPercentage,
+      );
+      if (newReadingStatus === 'finished' && existingBook.readingStatus !== 'finished') {
+        requestFinishPrompt(id, 'finished', true);
       }
       updateBookProgress(id, progress, newReadingStatus);
     }

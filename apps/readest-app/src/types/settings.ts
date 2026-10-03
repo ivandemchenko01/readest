@@ -533,6 +533,13 @@ export interface SystemSettings {
   metadataSeriesCollapsed: boolean;
   metadataOthersCollapsed: boolean;
   metadataDescriptionCollapsed: boolean;
+  // Fork: the book details sections use their own keys so their defaults
+  // (Description and Metadata + Series collapsed, Statistics expanded) apply
+  // to installs that already saved the upstream `metadata*Collapsed` flags.
+  metadataDescriptionExpanded: boolean;
+  /** Metadata + Series section. */
+  metadataInfoExpanded: boolean;
+  metadataStatsCollapsed: boolean;
   lastSyncedAtBooks: number;
   lastSyncedAtConfigs: number;
   lastSyncedAtNotes: number;

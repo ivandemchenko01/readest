@@ -16,6 +16,7 @@ import { formatAuthors, formatTitle } from '@/utils/book';
 import { navigateToLibrary } from '@/utils/nav';
 import BookCover from '@/components/BookCover';
 import BookDetailModal from '@/components/metadata/BookDetailModal';
+import FinishPromptHost from '@/components/metadata/FinishPromptHost';
 import Header from '@/app/user/components/Header';
 import { type RatingsSortKey, selectRatedBooks } from './utils/ratingsList';
 
@@ -194,6 +195,7 @@ const RatingsPage = () => {
         </div>
       </div>
       {detailsBook && <BookDetailModal isOpen book={detailsBook} onClose={handleCloseDetails} />}
+      <FinishPromptHost immediateOnly />
     </div>
   );
 };

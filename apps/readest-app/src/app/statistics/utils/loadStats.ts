@@ -27,6 +27,15 @@ export interface PeriodStats {
 const addDays = (date: Date, days: number) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 
+/** Epoch-second bounds of a period; without one (All time), everything up to the end of today. */
+export const periodRange = (period: StatsPeriod | null, now: Date) =>
+  period
+    ? { from: toEpochSecs(period.start), to: toEpochSecs(period.end) }
+    : {
+        from: 0,
+        to: toEpochSecs(addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 1)),
+      };
+
 /** Chart series + totals for one week/month: two SQL aggregates. */
 export const loadPeriodStats = async (
   db: StatisticsDb,
@@ -56,6 +65,38 @@ export const loadPeriodStats = async (
     prevSecs,
     elapsed,
   };
+};
+
+/** Distinct pages per day of the period (one aggregate); null for days after today. */
+export const loadDailyPages = async (
+  db: StatisticsDb,
+  period: StatsPeriod,
+  now: Date,
+  md5?: string,
+): Promise<(number | null)[]> => {
+  const { from, to } = periodRange(period, now);
+  const rows = await db.getDailyPages(from, to, tzOffsetSecs(period.start), md5);
+  const values = zeroFill(
+    rows.map((r) => ({ day: r.day, secs: r.pages })),
+    localEpochDay(period.start),
+    period.days,
+  );
+  const elapsed = elapsedDays(period, now);
+  return values.map((v, i) => (i < elapsed ? v : null));
+};
+
+/** All-time distinct pages of a book by month (daily aggregate rolled up in JS). */
+export const loadMonthlyPages = async (
+  db: StatisticsDb,
+  now: Date,
+  md5: string,
+): Promise<MonthSecs[]> => {
+  const { from, to } = periodRange(null, now);
+  const rows = await db.getDailyPages(from, to, tzOffsetSecs(now), md5);
+  return rollUpByMonth(
+    rows.map((r) => ({ day: r.day, secs: r.pages })),
+    now,
+  );
 };
 
 export const loadTodaySecs = async (db: StatisticsDb, now: Date, md5?: string) => {

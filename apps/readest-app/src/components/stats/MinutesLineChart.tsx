@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { niceAxisMax } from '@/utils/readingStats';
+import { monotonePath } from './chartPath';
 
 interface MinutesLineChartProps {
   /** Minutes per bucket; null = not reached yet (not drawn). */
   values: (number | null)[];
   /** X label per bucket; '' hides it. */
   labels: string[];
-  /** Text shown under the chart when a bucket is tapped. */
-  describe: (index: number) => string;
+  /** Text shown under the chart when a bucket is tapped; without it points are not tappable. */
+  describe?: (index: number) => string;
   height?: number;
 }
 
@@ -20,6 +21,7 @@ const BOTTOM = 18;
 /**
  * Static SVG line chart for e-ink: no animation, no library, currentColor ink.
  * Responsive through the viewBox; tapping a column prints its value below.
+ * The line is a monotone cubic through the known points (see `monotonePath`).
  */
 const MinutesLineChart: React.FC<MinutesLineChartProps> = ({
   values,
@@ -75,41 +77,45 @@ const MinutesLineChart: React.FC<MinutesLineChartProps> = ({
             </text>
           ) : null,
         )}
-        <polyline
-          points={known.map(({ i, v }) => `${x(i)},${y(v)}`).join(' ')}
+        <path
+          d={monotonePath(known.map(({ i, v }) => ({ x: x(i), y: y(v) })))}
           fill='none'
           stroke='currentColor'
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinejoin='round'
+          strokeLinecap='round'
         />
         {known.map(({ i, v }) => (
           <circle
             key={i}
             cx={x(i)}
             cy={y(v)}
-            r={selected === i ? 4 : 2.5}
+            r={selected === i ? 4 : 2.25}
             fill={selected === i ? 'none' : 'currentColor'}
             stroke='currentColor'
-            strokeWidth={selected === i ? 2 : 0}
+            strokeWidth={selected === i ? 1.5 : 0}
           />
         ))}
-        {known.map(({ i }) => (
-          <rect
-            key={i}
-            role='button'
-            aria-label={describe(i)}
-            x={x(i) - columnW / 2}
-            y={0}
-            width={columnW}
-            height={height}
-            fill='transparent'
-            onClick={() => setSelected(i)}
-          />
-        ))}
+        {describe &&
+          known.map(({ i }) => (
+            <rect
+              key={i}
+              role='button'
+              aria-label={describe(i)}
+              x={x(i) - columnW / 2}
+              y={0}
+              width={columnW}
+              height={height}
+              fill='transparent'
+              onClick={() => setSelected(i)}
+            />
+          ))}
       </svg>
-      <p className='text-base-content min-h-5 text-center text-sm'>
-        {selected !== null ? describe(selected) : ''}
-      </p>
+      {describe && (
+        <p className='text-base-content min-h-5 text-center text-sm'>
+          {selected !== null ? describe(selected) : ''}
+        </p>
+      )}
     </div>
   );
 };

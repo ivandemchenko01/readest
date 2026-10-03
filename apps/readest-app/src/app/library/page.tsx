@@ -96,6 +96,7 @@ import { AboutWindow } from '@/components/AboutWindow';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import LocalSendManager from '@/components/localsend/LocalSendManager';
 import { BookDetailModal } from '@/components/metadata';
+import FinishPromptHost from '@/components/metadata/FinishPromptHost';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import { CatalogDialog } from './components/OPDSDialog';
 import { FeedsView } from './components/feeds/FeedsView';
@@ -2171,6 +2172,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           <TransferQueuePanel />
         </ModalPortal>
       )}
+      <FinishPromptHost />
       <AboutWindow />
       <KeyboardShortcutsHelp />
       <LocalSendManager />

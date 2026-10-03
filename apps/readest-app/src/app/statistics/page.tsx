@@ -15,13 +15,17 @@ import {
   StatisticsDb,
   type BookSummary,
   type ManualSession,
+  type PeriodTotals,
+  type StatBookEntry,
 } from '@/services/statistics/statisticsDb';
 import {
   type MonthSecs,
+  type StatsPeriodKind,
   finishedInPeriod,
   getPeriod,
   isCurrentPeriod,
   monthDayLabels,
+  pagesPerHour,
   percentChange,
   shiftPeriod,
   toEpochSecs,
@@ -35,6 +39,7 @@ import SegmentedControl from '@/components/SegmentedControl';
 import MinutesLineChart from '@/components/stats/MinutesLineChart';
 import ProfileHeader from '@/app/user/components/Header';
 import AddReadingDialog, { type ManualReadingInput } from './components/AddReadingDialog';
+import ExperimentalStats from './components/ExperimentalStats';
 import {
   type PeriodStats,
   loadAllTimeMonths,
@@ -42,6 +47,7 @@ import {
   loadPeriodStats,
   loadStartedCount,
   loadTodaySecs,
+  periodRange,
 } from './utils/loadStats';
 import {
   PLACEHOLDER,
@@ -49,10 +55,35 @@ import {
   formatDuration,
   formatMonth,
   formatPeriodLabel,
+  rollingDayLabels,
   weekdayLabels,
 } from './utils/format';
 
-type Mode = 'week' | 'month' | 'all';
+type Mode = StatsPeriodKind | 'all';
+
+const MODE_KEY = 'readest-stats-mode';
+const MODES: readonly Mode[] = ['last7', 'last30', 'week', 'month', 'all'];
+
+const readStoredMode = (): Mode => {
+  try {
+    const stored = localStorage.getItem(MODE_KEY);
+    return MODES.find((m) => m === stored) ?? 'week';
+  } catch {
+    return 'week';
+  }
+};
+
+const storeMode = (mode: Mode) => {
+  try {
+    localStorage.setItem(MODE_KEY, mode);
+  } catch {
+    // a remembered tab is a convenience only
+  }
+};
+
+const MAX_TITLE = 40;
+const shortTitle = (title: string) =>
+  title.length > MAX_TITLE ? `${title.slice(0, MAX_TITLE - 1)}…` : title;
 
 interface MainData {
   today: number;
@@ -61,6 +92,8 @@ interface MainData {
   started: number;
   summary: BookSummary | null;
   manual: ManualSession[];
+  /** The selected book's totals for the period (reading pace); null otherwise. */
+  bookPeriod: PeriodTotals | null;
 }
 
 const Tile = ({ label, value }: { label: string; value: string }) => (
@@ -92,12 +125,15 @@ const StatisticsScreen = () => {
 
   const locale = getLocale();
   const [now] = useState(() => new Date());
-  const [mode, setMode] = useState<Mode>('week');
+  const [storedMode, setMode] = useState<Mode>(readStoredMode);
+  // All time exists only for one book.
+  const mode: Mode = storedMode === 'all' && !bookHash ? 'week' : storedMode;
   const [offset, setOffset] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [main, setMain] = useState<MainData | null>(null);
   const [notes, setNotes] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [statBooks, setStatBooks] = useState<StatBookEntry[] | null>(null);
 
   const book = bookHash && libraryLoaded ? getBookByHash(bookHash) : undefined;
   const books = useMemo(() => library.filter((b) => !b.deletedAt), [library]);
@@ -113,16 +149,18 @@ const StatisticsScreen = () => {
     setNotes(null);
     const load = async () => {
       const db = await StatisticsDb.open(appService);
-      const [today, periodStats, months, started, summary, manual] = await Promise.all([
+      const range = periodRange(period, now);
+      const [today, periodStats, months, started, summary, manual, bookPeriod] = await Promise.all([
         loadTodaySecs(db, now, bookHash),
         period ? loadPeriodStats(db, period, now, bookHash) : null,
         !period && bookHash ? loadAllTimeMonths(db, now, bookHash) : [],
         period && !bookHash ? loadStartedCount(db, period) : 0,
         bookHash ? db.getBookSummary(bookHash, tzOffsetSecs(now)) : null,
         bookHash ? db.getManualSessions(bookHash) : [],
+        period && bookHash ? db.getPeriodTotals(range.from, range.to, bookHash) : null,
       ]);
       if (cancelled) return;
-      setMain({ today, period: periodStats, months, started, summary, manual });
+      setMain({ today, period: periodStats, months, started, summary, manual, bookPeriod });
       // Notes need book configs: load them only after the main figures show.
       if (period && !bookHash && libraryLoaded) {
         const count = await loadNotesCount(db, appService, settings, getBookByHash, period);
@@ -136,6 +174,40 @@ const StatisticsScreen = () => {
     // settings only feeds config loading; reloading on every settings change is wasteful.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appService, period, bookHash, now, reloadKey, libraryLoaded, getBookByHash]);
+
+  // Book picker: books with reading time (book table only), joined to the library.
+  useEffect(() => {
+    if (!appService) return;
+    let cancelled = false;
+    StatisticsDb.open(appService)
+      .then((db) => db.getBooksWithStats())
+      .then((rows) => {
+        if (!cancelled) setStatBooks(rows);
+      })
+      .catch((err) => console.warn('[stats] book list failed:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [appService, reloadKey]);
+
+  const pickerBooks = useMemo(() => {
+    if (!libraryLoaded || !statBooks) return [];
+    const list = statBooks.flatMap(({ md5 }) => {
+      const b = getBookByHash(md5);
+      return b && !b.deletedAt ? [{ hash: md5, title: shortTitle(formatTitle(b.title)) }] : [];
+    });
+    // A book opened from its details page may have no reading yet: keep it selectable.
+    if (bookHash && !list.some((b) => b.hash === bookHash)) {
+      const b = getBookByHash(bookHash);
+      list.unshift({ hash: bookHash, title: shortTitle(b ? formatTitle(b.title) : bookHash) });
+    }
+    return list;
+  }, [statBooks, libraryLoaded, getBookByHash, bookHash]);
+
+  // Replace, not push: switching books never grows the history, so Back still
+  // leaves the statistics screen.
+  const selectBook = (hash: string) =>
+    router.replace(hash ? `/statistics?book=${hash}` : '/statistics');
 
   const finished = useMemo(
     () =>
@@ -175,6 +247,7 @@ const StatisticsScreen = () => {
 
   const changeMode = (next: Mode) => {
     setMode(next);
+    storeMode(next);
     setOffset(0);
   };
 
@@ -188,50 +261,63 @@ const StatisticsScreen = () => {
   const changeText =
     change === null ? PLACEHOLDER : `${change >= 0 ? '▲' : '▼'} ${Math.abs(change)}%`;
 
+  const isCurrent = !period || isCurrentPeriod(period, now);
   let values: (number | null)[] = [];
   let labels: string[] = [];
+  let bucketName = (_i: number) => '';
   let describe = (_i: number) => '';
   if (period) {
     values = (main?.period?.daily ?? new Array<null>(period.days).fill(null)).map((v) =>
       v === null ? null : v / 60,
     );
-    labels = period.kind === 'week' ? weekdayLabels(locale) : monthDayLabels(period.days);
-    describe = (i) => {
-      const day = new Date(
-        period.start.getFullYear(),
-        period.start.getMonth(),
-        period.start.getDate() + i,
+    if (period.kind === 'week') labels = weekdayLabels(locale);
+    else if (period.kind === 'month') labels = monthDayLabels(period.days);
+    else labels = rollingDayLabels(period, locale, isCurrent ? _('Today') : undefined);
+    bucketName = (i) =>
+      formatDate(
+        new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate() + i),
+        locale,
       );
-      return `${formatDate(day, locale)}: ${fmt(main?.period?.daily[i])}`;
-    };
+    describe = (i) => `${bucketName(i)}: ${fmt(main?.period?.daily[i])}`;
   } else if (main) {
     const months = main.months;
     const every = Math.max(1, Math.ceil(months.length / 6));
     values = months.map((m) => m.secs / 60);
     labels = months.map((m, i) => (i % every === 0 ? formatMonth(m.year, m.month, locale) : ''));
-    describe = (i) => {
+    bucketName = (i) => {
       const m = months[i];
-      return m ? `${formatMonth(m.year, m.month, locale)}: ${fmt(m.secs)}` : '';
+      return m ? formatMonth(m.year, m.month, locale) : '';
     };
+    describe = (i) => `${bucketName(i)}: ${fmt(months[i]?.secs)}`;
   }
 
   const summary = main?.summary;
-  const pagesPerHour =
-    summary && summary.totalSecs >= 60
-      ? String(Math.round(summary.pages / (summary.totalSecs / 3600)))
+  const allTimePace = summary ? pagesPerHour(summary.pages, summary.totalSecs) : null;
+  const bookPeriod = main?.bookPeriod;
+  const periodPace = bookPeriod ? pagesPerHour(bookPeriod.pages, bookPeriod.secs) : null;
+  const minutesPerDay =
+    bookPeriod && main?.period?.elapsed
+      ? String(Math.round(bookPeriod.secs / 60 / main.period.elapsed))
       : PLACEHOLDER;
   const progress =
     book?.progress && book.progress[1] > 0
       ? `${Math.round((book.progress[0] / book.progress[1]) * 100)}%`
       : PLACEHOLDER;
 
-  const modeOptions = [
-    { value: 'week' as const, label: _('Week') },
-    { value: 'month' as const, label: _('Month') },
+  const modeOptions: { value: Mode; label: string }[] = [
+    { value: 'last7', label: _('7 days') },
+    { value: 'last30', label: _('30 days') },
+    { value: 'week', label: _('Week') },
+    { value: 'month', label: _('Month') },
     ...(bookHash ? [{ value: 'all' as const, label: _('All time') }] : []),
   ];
-  const isCurrent = !period || isCurrentPeriod(period, now);
-  const changeLabel = mode === 'week' ? _('vs previous week') : _('vs previous month');
+  const changeLabels: Record<StatsPeriodKind, string> = {
+    last7: _('vs previous 7 days'),
+    last30: _('vs previous 30 days'),
+    week: _('vs previous week'),
+    month: _('vs previous month'),
+  };
+  const changeLabel = period ? changeLabels[period.kind] : '';
 
   return (
     <div className='bg-base-100 full-height inset-0 select-none overflow-hidden'>
@@ -261,6 +347,20 @@ const StatisticsScreen = () => {
           ) : (
             <h1 className='text-xl font-bold'>{_('Reading Statistics')}</h1>
           )}
+
+          <select
+            className='select eink-bordered border-base-content/40 h-11 min-h-11 w-full truncate'
+            aria-label={_('Book')}
+            value={bookHash ?? ''}
+            onChange={(e) => selectBook(e.target.value)}
+          >
+            <option value=''>{_('All books')}</option>
+            {pickerBooks.map((b) => (
+              <option key={b.hash} value={b.hash}>
+                {b.title}
+              </option>
+            ))}
+          </select>
 
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <SegmentedControl<Mode>
@@ -312,11 +412,27 @@ const StatisticsScreen = () => {
           <MinutesLineChart values={values} labels={labels} describe={describe} height={110} />
           <p className='text-base-content/80 -mt-3 text-center text-xs'>{_('Minutes per day')}</p>
 
+          {bookHash && period && (
+            <section className='flex flex-col'>
+              <h2 className='font-semibold'>{_('Reading pace for the period')}</h2>
+              <div className='divide-base-content/20 flex flex-col divide-y'>
+                <Row
+                  label={_('Pages per hour')}
+                  value={periodPace === null ? PLACEHOLDER : String(periodPace)}
+                />
+                <Row label={_('Minutes per day')} value={minutesPerDay} />
+              </div>
+            </section>
+          )}
+
           {bookHash ? (
             <section className='divide-base-content/20 flex flex-col divide-y'>
               <Row label={_('Total time')} value={fmt(summary?.totalSecs)} />
               <Row label={_('Days read')} value={summary ? String(summary.days) : PLACEHOLDER} />
-              <Row label={_('Pages per hour')} value={pagesPerHour} />
+              <Row
+                label={_('Pages per hour')}
+                value={allTimePace === null ? PLACEHOLDER : String(allTimePace)}
+              />
               <Row
                 label={_('First read')}
                 value={
@@ -360,6 +476,14 @@ const StatisticsScreen = () => {
               </div>
             </section>
           )}
+
+          <ExperimentalStats
+            period={period}
+            now={now}
+            bookHash={bookHash}
+            labels={labels}
+            bucketName={bucketName}
+          />
 
           {bookHash && main && main.manual.length > 0 && (
             <section className='flex flex-col gap-2'>

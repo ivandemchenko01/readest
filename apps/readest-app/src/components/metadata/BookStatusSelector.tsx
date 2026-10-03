@@ -1,19 +1,20 @@
 import clsx from 'clsx';
 import React from 'react';
-import type { Book, ReadingStatus } from '@/types/book';
+import type { Book, BookStatusCategory } from '@/types/book';
 import { useEnv } from '@/context/EnvContext';
 import { useLibraryStore } from '@/store/libraryStore';
+import { requestFinishPrompt } from '@/store/finishPromptStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getBookStatusCategory } from '@/utils/book';
 import { BOOK_STATUS_LABELS, withReadingStatus } from '@/app/library/utils/libraryUtils';
 
-const STATUSES: ReadingStatus[] = ['unread', 'reading', 'finished', 'abandoned'];
+const STATUSES: BookStatusCategory[] = ['unread', 'reading', 'finished', 'library'];
 
 /**
  * Segmented status picker for the book details dialog. Reads the live book
  * from the library store so a change shows at once, and saves through
- * `withReadingStatus` like the library menus so sync keeps working. Tapping the
- * active status clears it.
+ * `withReadingStatus` like the library menus so sync keeps working. Library
+ * clears the status; Finished also asks for a rating.
  */
 const BookStatusSelector: React.FC<{ book: Book }> = ({ book }) => {
   const _ = useTranslation();
@@ -21,9 +22,11 @@ const BookStatusSelector: React.FC<{ book: Book }> = ({ book }) => {
   const liveBook = useLibraryStore((state) => state.getBookByHash(book.hash)) ?? book;
   const current = getBookStatusCategory(liveBook);
 
-  const handleSelect = async (status: ReadingStatus) => {
-    const next = status === current ? undefined : status;
+  const handleSelect = async (status: BookStatusCategory) => {
+    if (status === current) return;
+    const next = status === 'library' ? undefined : status;
     await useLibraryStore.getState().updateBooks(envConfig, [withReadingStatus(liveBook, next)]);
+    if (status === 'finished') requestFinishPrompt(liveBook.hash, 'finished');
   };
 
   return (
@@ -41,7 +44,9 @@ const BookStatusSelector: React.FC<{ book: Book }> = ({ book }) => {
               index > 0 && '-ms-px',
               index === 0 && 'rounded-s-lg',
               index === STATUSES.length - 1 && 'rounded-e-lg',
-              active ? 'bg-base-content text-base-100 font-semibold' : 'text-base-content',
+              active
+                ? 'eink-inverted bg-base-content text-base-100 font-semibold'
+                : 'text-base-content',
             )}
           >
             {_(BOOK_STATUS_LABELS[status])}
