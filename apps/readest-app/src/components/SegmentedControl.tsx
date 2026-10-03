@@ -22,6 +22,9 @@ interface SegmentedControlProps<T extends string | number> {
   // Stretch segments to fill the container; otherwise they hug their content.
   fullWidth?: boolean;
   className?: string;
+  // 'contrast' fills the active segment with the text colour (black on a light
+  // theme) — readable on e-ink panels whether or not e-ink mode is enabled.
+  tone?: 'primary' | 'contrast';
 }
 
 // iOS-style segmented control: a subtle track holds N equally-weighted
@@ -46,6 +49,7 @@ const SegmentedControl = <T extends string | number>({
   size = 'sm',
   fullWidth = false,
   className,
+  tone = 'primary',
 }: SegmentedControlProps<T>) => {
   const sizeClasses = size === 'md' ? 'px-4 py-1.5 text-sm' : 'px-3 py-1 text-sm';
 
@@ -78,7 +82,12 @@ const SegmentedControl = <T extends string | number>({
               fullWidth && 'flex-1',
               sizeClasses,
               selected
-                ? 'eink-inverted bg-primary text-primary-content shadow-xs'
+                ? clsx(
+                    'eink-inverted shadow-xs',
+                    tone === 'contrast'
+                      ? 'bg-base-content text-base-100'
+                      : 'bg-primary text-primary-content',
+                  )
                 : 'text-base-content/70 hover:text-base-content',
             )}
           >

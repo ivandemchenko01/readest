@@ -137,6 +137,12 @@ const RatingsPage = () => {
           paddingBottom: `${safeAreaInsets?.bottom || 0}px`,
         }}
       >
+        {/* The shared Header is a transparent fixed strip; back it so the list scrolls under it. */}
+        <div
+          aria-hidden='true'
+          className='bg-base-100 fixed inset-x-0 top-0 z-20'
+          style={{ height: `${(safeAreaInsets?.top || 0) + 56}px` }}
+        />
         <Header onGoBack={() => navigateToLibrary(router, '', undefined, true)} />
         <div className='w-full max-w-3xl px-4 pt-14'>
           <h1 className='text-base-content mb-3 text-xl font-bold'>{_('My Ratings')}</h1>

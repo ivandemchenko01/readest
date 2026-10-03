@@ -325,6 +325,12 @@ const StatisticsScreen = () => {
         className='flex h-full w-full flex-col items-center overflow-y-auto'
         style={{ paddingTop: `${safeAreaInsets?.top || 0}px` }}
       >
+        {/* ProfileHeader is a transparent fixed strip; back it so content scrolls under it. */}
+        <div
+          aria-hidden='true'
+          className='bg-base-100 fixed inset-x-0 top-0 z-20'
+          style={{ height: `${(safeAreaInsets?.top || 0) + 64}px` }}
+        />
         <ProfileHeader onGoBack={handleBack} />
         <div
           className='text-base-content flex w-full max-w-2xl flex-col gap-5 px-4 pt-16'
@@ -368,6 +374,7 @@ const StatisticsScreen = () => {
               value={mode}
               onChange={changeMode}
               size='md'
+              tone='contrast'
               ariaLabel={_('Period')}
             />
             <button
