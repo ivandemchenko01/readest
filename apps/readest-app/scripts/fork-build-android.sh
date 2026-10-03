@@ -41,6 +41,8 @@ export CARGO_PROFILE_RELEASE_INCREMENTAL="${CARGO_PROFILE_RELEASE_INCREMENTAL:-t
 keystore_props="/d/dev/keys/keystore.properties"
 
 if [ "$skip_init" = 0 ]; then
+  # A gradle daemon from a previous (possibly interrupted) build keeps files in gen/android locked.
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/fork-stop-gradle.ps1 >/dev/null 2>&1 || true
   rm -rf src-tauri/gen/android
   pnpm tauri android init --ci
   pnpm tauri icon ../../data/icons/readest-book.png
