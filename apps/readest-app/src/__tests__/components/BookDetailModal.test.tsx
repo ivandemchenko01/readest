@@ -4,6 +4,7 @@ import { render, cleanup, fireEvent, waitFor, screen } from '@testing-library/re
 import { Book } from '@/types/book';
 import BookDetailModal from '@/components/metadata/BookDetailModal';
 import { DropdownProvider } from '@/context/DropdownContext';
+import { useLibraryStore } from '@/store/libraryStore';
 
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => (s: string) => s,
@@ -12,6 +13,8 @@ vi.mock('@/hooks/useTranslation', () => ({
 const appSvc = {
   getBookFileSize: vi.fn(async () => 1024),
   fetchBookDetails: vi.fn(async () => null),
+  saveLibraryBooks: vi.fn(async (_books: Book[]) => {}),
+  loadLibraryBooks: vi.fn(async (): Promise<Book[]> => []),
 };
 
 vi.mock('@/context/EnvContext', () => ({
@@ -186,5 +189,28 @@ describe('BookDetailModal purge-on-delete routing', () => {
     fireEvent.click(screen.getByText('confirm-keep-data'));
     expect(handleBookDelete).toHaveBeenCalledTimes(1);
     expect(handleBookPurge).not.toHaveBeenCalled();
+  });
+});
+
+describe('BookDetailModal rating', () => {
+  it('saves a star rating to the library without bumping updatedAt and shows it at once', async () => {
+    const book = { ...makeBook(), updatedAt: 1234 };
+    useLibraryStore.getState().setLibrary([book]);
+    render(<BookDetailModal book={book} isOpen onClose={vi.fn()} />);
+
+    const stars = screen.getAllByRole('button', { name: 'Rate {{rating}} out of 5' });
+    expect(stars).toHaveLength(5);
+    fireEvent.click(stars[3]!);
+
+    await waitFor(() => expect(appSvc.saveLibraryBooks).toHaveBeenCalled());
+    const saved = useLibraryStore.getState().getBookByHash('abc123');
+    expect(saved?.rating).toBe(4);
+    expect(saved?.updatedAt).toBe(1234);
+    expect(typeof saved?.ratingUpdatedAt).toBe('number');
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Rate {{rating}} out of 5' })[3]!
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
   });
 });

@@ -309,6 +309,21 @@ export const applyBookTagEdits = (
     return { ...book, tags: [...kept, ...added], metadataUpdatedAt: now };
   });
 
+export type BookRatingEdit = Pick<Book, 'rating' | 'review'>;
+
+// Returns the book with its rating/review replaced (an invalid rating or a
+// blank review clears the field). Stamps ratingUpdatedAt only; updatedAt is
+// the Date Read sort key and a rating is not a read (#6414).
+export const withRating = (book: Book, edit: BookRatingEdit, now = Date.now()): Book => {
+  const rating =
+    edit.rating && Number.isInteger(edit.rating) && edit.rating >= 1 && edit.rating <= 5
+      ? edit.rating
+      : undefined;
+  const review = edit.review?.trim() || undefined;
+  if (rating === book.rating && review === book.review) return book;
+  return { ...book, rating, review, ratingUpdatedAt: now };
+};
+
 const getBookValuesText = (book: Book): string =>
   [...getBookTags(book), ...getBookSubjects(book)].join(' ');
 
@@ -434,21 +449,34 @@ export const formatTimeLeft = (totalMinutes: number, _: TranslationFunc): string
 const getShelfItemTimeRemaining = (item: Book | BooksGroup): number | undefined =>
   'books' in item ? undefined : getDisplayedTimeRemaining(item);
 
+/** True when a shelf item has no rating to sort by (a group: none of its books is rated). */
+const isShelfItemUnrated = (item: Book | BooksGroup): boolean =>
+  'books' in item ? !item.books.some((b) => b.rating) : !item.rating;
+
 /**
  * Wrap a comparator that has *already* had the sort direction applied, so items
- * with no remaining time always land after the ones that have it — ascending and
- * descending alike. "No time" is a bucket, not a value: it must sit outside the
- * sort-order multiplier, otherwise descending would float those items to the top.
+ * with no remaining time (or, for the Rating sort, no rating) always land after
+ * the ones that have it — ascending and descending alike. "No value" is a
+ * bucket, not a value: it must sit outside the sort-order multiplier, otherwise
+ * descending would float those items to the top.
  */
 export const withTimeRemainingLast =
   <T extends Book | BooksGroup>(sortBy: LibrarySortByType, compare: (a: T, b: T) => number) =>
   (a: T, b: T): number => {
-    if (sortBy !== LibrarySortByType.TimeRemaining) return compare(a, b);
-    const aTime = getShelfItemTimeRemaining(a);
-    const bTime = getShelfItemTimeRemaining(b);
-    if (aTime === undefined && bTime === undefined) return 0;
-    if (aTime === undefined) return 1;
-    if (bTime === undefined) return -1;
+    let aMissing: boolean;
+    let bMissing: boolean;
+    if (sortBy === LibrarySortByType.TimeRemaining) {
+      aMissing = getShelfItemTimeRemaining(a) === undefined;
+      bMissing = getShelfItemTimeRemaining(b) === undefined;
+    } else if (sortBy === LibrarySortByType.Rating) {
+      aMissing = isShelfItemUnrated(a);
+      bMissing = isShelfItemUnrated(b);
+    } else {
+      return compare(a, b);
+    }
+    if (aMissing && bMissing) return 0;
+    if (aMissing) return 1;
+    if (bMissing) return -1;
     return compare(a, b);
   };
 
@@ -519,6 +547,13 @@ const compareBookByKey = (
       if (aTime === undefined) return 1;
       if (bTime === undefined) return -1;
       return aTime - bTime;
+    }
+    case LibrarySortByType.Rating: {
+      // Unrated books go last (ascending); see withTimeRemainingLast for descending.
+      if (!a.rating && !b.rating) return 0;
+      if (!a.rating) return 1;
+      if (!b.rating) return -1;
+      return a.rating - b.rating;
     }
     default:
       return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
@@ -905,6 +940,9 @@ export const getBookSortValue = (book: Book, sortBy: LibrarySortByType): number 
       // Return Infinity if a book does not have time remaining (ie. if the book is unread or finished) so it is sorted after books with time remaining
       return getTimeRemainingMinutes(book) ?? Infinity;
 
+    case LibrarySortByType.Rating:
+      return book.rating ?? 0;
+
     default:
       return book.updatedAt;
   }
@@ -975,6 +1013,10 @@ export const getGroupSortValue = (
     case LibrarySortByType.TimeRemaining:
       // Return book with least amount of time remaining
       return Math.min(...books.map((b) => getTimeRemainingMinutes(b) ?? Infinity));
+
+    case LibrarySortByType.Rating:
+      // Return the highest rating in the group
+      return Math.max(...books.map((b) => b.rating ?? 0));
 
     default:
       return Math.max(...books.map((b) => b.updatedAt));

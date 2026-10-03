@@ -8,6 +8,8 @@ import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useLibraryStore } from '@/store/libraryStore';
+=======
+import { type BookRatingEdit, withRating } from '@/app/library/utils/libraryUtils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMetadataEdit } from './useMetadataEdit';
 import { DeleteAction } from '@/types/system';
@@ -173,6 +175,21 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     }
   };
 
+  // Rating/review are saved straight to the library (from the library and the
+  // reader alike). Start from the store's copy so fresher fields such as
+  // reading progress are not overwritten by this dialog's snapshot.
+  const handleRatingChange = (edit: BookRatingEdit) => {
+    const { getBookByHash, updateBooks } = useLibraryStore.getState();
+    const updated = withRating(getBookByHash(book.hash) ?? displayBook, edit);
+    setDisplayBook((current) => ({
+      ...current,
+      rating: updated.rating,
+      review: updated.review,
+      ratingUpdatedAt: updated.ratingUpdatedAt,
+    }));
+    void updateBooks(envConfig, [updated]);
+  };
+
   const handleDeleteAction = (action: DeleteMenuAction) => {
     setActiveDeleteAction(action);
   };
@@ -304,6 +321,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 }
                 offlinePremiumLabel={offlinePremiumLabel}
                 onMetadataValueClick={onMetadataValueClick}
+                onRatingChange={handleRatingChange}
               />
             )}
           </div>

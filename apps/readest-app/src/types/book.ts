@@ -156,6 +156,11 @@ export interface Book {
   progress?: [number, number] | null; // Add progress field: [current, total], 1-based page number
   readingStatus?: ReadingStatus;
   readingStatusUpdatedAt?: number; // ms; bumped only when readingStatus changes
+  // Personal rating (integer 1–5) and review. Device-local: not in the cloud
+  // whitelist (transformBookToDB), so a pull merge keeps the local values.
+  rating?: number;
+  review?: string;
+  ratingUpdatedAt?: number; // ms; bumped when rating or review changes, never updatedAt
   primaryLanguage?: string;
   // The book carries its own recorded narration (EPUB 3 Media Overlays), so the
   // library can badge it without opening the file. Derived from the file on
