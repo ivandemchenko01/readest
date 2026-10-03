@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # Fork helper: build an arm64 APK from the current worktree (Windows + Git Bash).
-# Usage (from apps/readest-app): bash scripts/fork-build-android.sh [--skip-init] [--debug]
+# Usage (from apps/readest-app): bash scripts/fork-build-android.sh [--skip-init] [--debug] [--full]
+#   --full: final build with upstream settings (codegen-units=1, R8 minify, fresh init) for daily use
 #   default: optimised release build signed with the fork key (fast on the e-ink device, ~40-60MB)
 #   --debug: unoptimised debug build (~750MB, slow on device; only for native debugging)
 # Output is copied to D:\dev\apks\readest-fork-<branch>[-debug].apk
 set -euo pipefail
 
 skip_init=0
+full=0
 profile=release
 for arg in "$@"; do
   case "$arg" in
     --skip-init) skip_init=1 ;;
     --debug) profile=debug ;;
+    --full) full=1 ;;
     *) echo "unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -24,6 +27,10 @@ export CARGO_HOME="${CARGO_HOME:-D:\\dev\\rust\\cargo}"
 export GRADLE_USER_HOME="${GRADLE_USER_HOME:-D:\\dev\\gradle}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-D:\\dev\\cargo-target\\readest}"
 export PATH="/d/dev/rust/cargo/bin:$(cygpath -u "$JAVA_HOME")/bin:$PATH"
+if [ "$full" = 1 ]; then
+  skip_init=0
+  export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1 CARGO_PROFILE_RELEASE_INCREMENTAL=false FORK_NO_MINIFY=0
+fi
 # Upstream release profile uses codegen-units=1 (smallest .so, single-threaded codegen):
 # the main crate embeds the frontend, so every UI change recompiles it for ~6 min.
 # Fork builds trade a few MB for parallel + incremental codegen.
