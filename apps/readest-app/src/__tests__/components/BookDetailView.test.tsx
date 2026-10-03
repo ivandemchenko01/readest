@@ -340,3 +340,11 @@ describe('BookDetailView untrusted description', () => {
     expect(description.querySelector('iframe')).toBeNull();
   });
 });
+
+describe('BookDetailView statistics section', () => {
+  it('shows a collapsed Statistics section after the description', () => {
+    const { getByRole } = renderView();
+    const toggle = getByRole('button', { name: 'Statistics' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+});

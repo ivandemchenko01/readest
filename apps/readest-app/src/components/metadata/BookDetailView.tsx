@@ -34,6 +34,7 @@ import { isFeedBook } from '@/services/rss/feedBookUrl';
 import { saveSysSettings } from '@/helpers/settings';
 import BookCover from '@/components/BookCover';
 import BookCoverViewer, { useBookCoverViewer } from '@/components/BookCoverViewer';
+import BookStatsSection from './BookStatsSection';
 import Dropdown from '../Dropdown';
 import MenuItem from '../MenuItem';
 
@@ -479,6 +480,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </div>
           )}
         </div>
+        <BookStatsSection bookHash={book.hash} />
       </div>
     </div>
   );

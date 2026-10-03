@@ -168,6 +168,25 @@ const migrations: Record<SchemaType, MigrationEntry[]> = {
         );
       `,
     },
+    // Fork: manually added reading sessions (backfill). The session row holds
+    // what is needed to re-derive its page_stat_data keys (see
+    // splitManualSession), so deleting a session removes exactly its events.
+    {
+      name: '2026100301_readest_manual_session',
+      sql: `
+        CREATE TABLE IF NOT EXISTS readest_manual_session (
+          id integer PRIMARY KEY autoincrement,
+          book_hash text NOT NULL,
+          start_time integer NOT NULL,
+          duration integer NOT NULL,
+          pages integer NOT NULL DEFAULT 0,
+          first_page integer NOT NULL,
+          created_at integer NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS readest_manual_session_book ON readest_manual_session(book_hash, start_time);
+      `,
+    },
   ],
   // Per-book search index/cache: one search.db in each book's directory
   // (beside cover.png), holding extracted section text so library full-text
