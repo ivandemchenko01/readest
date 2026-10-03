@@ -8,6 +8,7 @@ export NDK_HOME="${NDK_HOME:-D:\\dev\\android-sdk\\ndk\\28.2.13676358}"
 export JAVA_HOME="${JAVA_HOME:-C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.16.8-hotspot}"
 export RUSTUP_HOME="${RUSTUP_HOME:-D:\\dev\\rust\\rustup}"
 export CARGO_HOME="${CARGO_HOME:-D:\\dev\\rust\\cargo}"
+export GRADLE_USER_HOME="${GRADLE_USER_HOME:-D:\\dev\\gradle}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-D:\dev\cargo-target\readest}"
 export PATH="/d/dev/rust/cargo/bin:$(cygpath -u "$JAVA_HOME")/bin:$PATH"
 
