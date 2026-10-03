@@ -49,7 +49,7 @@ const StatusFilterBar: React.FC<StatusFilterBarProps> = ({ value, counts, onChan
             className={clsx(
               'flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm',
               active
-                ? 'border-base-content bg-base-content text-base-100'
+                ? 'eink-inverted border-base-content bg-base-content text-base-100'
                 : 'border-base-content/20 text-base-content eink:border-base-content',
             )}
           >

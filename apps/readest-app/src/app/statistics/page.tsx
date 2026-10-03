@@ -293,7 +293,7 @@ const StatisticsScreen = () => {
               <button
                 type='button'
                 aria-label={_('Next period')}
-                className='btn btn-ghost h-11 min-h-11 w-11 p-0'
+                className='btn btn-ghost h-11 min-h-11 w-11 p-0 disabled:invisible'
                 disabled={isCurrent}
                 onClick={() => setOffset((o) => o + 1)}
               >
@@ -309,7 +309,7 @@ const StatisticsScreen = () => {
             {period && <Tile label={changeLabel} value={main ? changeText : PLACEHOLDER} />}
           </div>
 
-          <MinutesLineChart values={values} labels={labels} describe={describe} />
+          <MinutesLineChart values={values} labels={labels} describe={describe} height={110} />
           <p className='text-base-content/80 -mt-3 text-center text-xs'>{_('Minutes per day')}</p>
 
           {bookHash ? (

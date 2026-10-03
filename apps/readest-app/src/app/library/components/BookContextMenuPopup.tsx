@@ -106,8 +106,15 @@ const BookContextMenuPopup: React.FC<BookContextMenuPopupProps> = ({
       </div>
       <div
         ref={menuRef}
-        className={clsx('absolute z-[1] w-max', !placement && 'invisible')}
-        style={{ left: placement?.left ?? 0, top: placement?.top ?? 0 }}
+        className={clsx('absolute z-[1] w-max select-none', !placement && 'invisible')}
+        // The finger that long-pressed is still down when the popup opens under it;
+        // without this the WebView starts a text selection on the menu item.
+        style={{
+          left: placement?.left ?? 0,
+          top: placement?.top ?? 0,
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+        }}
       >
         <Menu
           className='dropdown-content no-triangle bg-base-100 rounded-box eink-bordered relative! z-[1] mt-0! p-2 shadow-sm'

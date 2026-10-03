@@ -67,7 +67,7 @@ const MinutesLineChart: React.FC<MinutesLineChartProps> = ({
               key={i}
               x={x(i)}
               y={height - 4}
-              textAnchor='middle'
+              textAnchor={i === labels.length - 1 ? 'end' : 'middle'}
               fontSize={9}
               fill='currentColor'
             >

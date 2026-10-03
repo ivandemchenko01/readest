@@ -54,7 +54,7 @@ const SegmentedControl = <T extends string | number>({
       role='radiogroup'
       aria-label={ariaLabel}
       className={clsx(
-        'bg-base-300/60 rounded-lg p-0.5',
+        'bg-base-300/60 eink:bg-base-100 eink:border eink:border-base-content rounded-lg p-0.5',
         fullWidth ? 'flex w-full' : 'inline-flex',
         className,
       )}
@@ -78,7 +78,7 @@ const SegmentedControl = <T extends string | number>({
               fullWidth && 'flex-1',
               sizeClasses,
               selected
-                ? 'bg-primary text-primary-content shadow-xs'
+                ? 'eink-inverted bg-primary text-primary-content shadow-xs'
                 : 'text-base-content/70 hover:text-base-content',
             )}
           >
