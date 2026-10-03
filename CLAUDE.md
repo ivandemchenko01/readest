@@ -32,8 +32,18 @@ Claude Code cannot write `.git/HEAD` / `.git/config` of the main checkout, so br
 | `D:\git_repos\readest-wt\base` | `fork-base` (app id, docs) |
 | `D:\git_repos\readest-wt\<feature>` | `feat/<feature>`, branched from `fork-base` |
 
-New worktree: `git worktree add ../readest-wt/<name> -b feat/<name> fork-base`, then in it:
-`git submodule update --init --recursive && pnpm install && pnpm --filter @readest/readest-app setup-vendors`.
+**Don't duplicate installs/builds — the user's PC is slow and Defender scans every file** (do NOT add Defender exclusions).
+New worktree, reusing what's already on disk (no network, no rebuild):
+
+```bash
+bash apps/readest-app/scripts/fork-new-worktree.sh <name> [base-branch]
+# = worktree add + submodules borrowed from main clone's .git/modules (--reference)
+#   + pnpm install --offline (hardlinks from D:\.pnpm-store) + copy public/vendor from base
+```
+
+Never copy `node_modules` between worktrees: pnpm uses absolute junctions on Windows, a copy silently
+points at the source worktree's packages. Build APKs one at a time (shared `CARGO_TARGET_DIR`);
+run only the targeted vitest files, not the full suite.
 
 ## Toolchain
 
