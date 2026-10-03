@@ -58,20 +58,21 @@ JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.16.8-hotspot   (PATH `java`
 
 Shells started before the env vars were persisted won't see them — export them explicitly in Bash.
 
-## Build a debug APK (arm64)
+## Build an APK (arm64)
 
-From `apps/readest-app` in a worktree:
+From `apps/readest-app` in a worktree (one build at a time):
 
 ```bash
-rm -rf src-tauri/gen/android
-pnpm tauri android init --ci
-pnpm tauri icon ../../data/icons/readest-book.png
-git checkout -- src-tauri/gen/android src-tauri/icons   # restore tracked customisations (incl. applicationId)
-pnpm tauri android build --debug --apk --target aarch64
+bash scripts/fork-build-android.sh               # release: optimised, signed with the fork key
+bash scripts/fork-build-android.sh --debug       # debug: ~750MB, slow on device - native debugging only
+bash scripts/fork-build-android.sh --skip-init   # reuse an existing gen/android
 ```
 
-Output: `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`.
-Re-run init after switching branches or after a `tauri android dev` session (it bakes the dev URL in).
+The script re-creates `src-tauri/gen/android` (`tauri android init` + `tauri icon` + `git checkout` of the tracked
+customisations, incl. `applicationId`), copies the signing config and builds. The APK is copied to
+`D:\dev\apks\readest-fork-<branch>.apk`. Signing key: `D:\dev\keys` (outside the repo - keep it, otherwise the
+next APK cannot update the installed one). Re-init after a `tauri android dev` session (it bakes the dev URL in).
+Biome: don't run `pnpm format` repo-wide on Windows (rewrites CRLF in ~2600 files); run `pnpm exec biome format --write <files>`.
 
 ## Testing loop
 
