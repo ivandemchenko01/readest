@@ -88,7 +88,8 @@ android {
             }
         }
         getByName("release") {
-            isMinifyEnabled = true
+            // Fork: FORK_NO_MINIFY=1 skips R8 for quick local builds (the Rust .so dominates APK size).
+            isMinifyEnabled = System.getenv("FORK_NO_MINIFY") != "1"
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("signing")
             }
