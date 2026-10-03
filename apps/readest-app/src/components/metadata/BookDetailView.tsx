@@ -35,9 +35,9 @@ import { saveSysSettings } from '@/helpers/settings';
 import BookCover from '@/components/BookCover';
 import BookCoverViewer, { useBookCoverViewer } from '@/components/BookCoverViewer';
 import BookStatusSelector from './BookStatusSelector';
-=======
 import type { BookRatingEdit } from '@/app/library/utils/libraryUtils';
 import BookRatingSection from './BookRatingSection';
+import BookStatsSection from './BookStatsSection';
 import Dropdown from '../Dropdown';
 import MenuItem from '../MenuItem';
 
@@ -487,6 +487,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </div>
           )}
         </div>
+        <BookStatsSection bookHash={book.hash} />
       </div>
     </div>
   );

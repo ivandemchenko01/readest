@@ -2,6 +2,7 @@ import type { AppService } from '@/types/system';
 import type { DatabaseService, DatabaseRow } from '@/types/database';
 import { DEFAULT_STATS_TRACKING_CONFIG } from '@/types/statistics';
 import type { PageStatEvent, StatBook } from '@/types/statistics';
+import { splitManualSession, type DaySecs } from '@/utils/readingStats';
 
 interface BookRow extends DatabaseRow {
   id: number;
@@ -15,6 +16,31 @@ interface BookRow extends DatabaseRow {
 }
 
 type CursorKey = 'push' | 'pull' | 'bookorbit-push';
+
+export interface PeriodTotals {
+  secs: number;
+  pages: number;
+  books: number;
+}
+
+export interface BookSummary {
+  totalSecs: number;
+  days: number;
+  firstRead: number; // epoch secs
+  lastRead: number; // epoch secs
+  pages: number;
+}
+
+export interface ManualSession {
+  id: number;
+  startTime: number;
+  durationSecs: number;
+  pages: number;
+}
+
+// Restricts `page_stat_data p` to one book by md5. The id_book lookup uses the
+// UNIQUE(id_book, page, start_time) index.
+const BOOK_FILTER = 'AND p.id_book = (SELECT id FROM book WHERE md5 = ? LIMIT 1)';
 
 // Readest caps one page visit at this, so a longer event spans several pages
 // (a CrossPoint session recorded in whole percents) and says nothing about pace.
@@ -196,6 +222,193 @@ export class StatisticsDb {
         durations.length % 2 ? durations[mid]! : (durations[mid - 1]! + durations[mid]!) / 2;
     }
     return medians;
+  }
+
+  /**
+   * Seconds read per LOCAL day in [fromSec, toSec). `day` is
+   * `(start_time + tzOffsetSecs) / 86400` (see `localEpochDay`); days without
+   * reading are absent. Optional book filter by md5.
+   */
+  async getDailyReadingSecs(
+    fromSec: number,
+    toSec: number,
+    tzOffsetSecs: number,
+    md5?: string,
+  ): Promise<DaySecs[]> {
+    const rows = await this.db.select<{ day: number; secs: number }>(
+      `SELECT (p.start_time + ?) / 86400 AS day, SUM(p.duration) AS secs
+       FROM page_stat_data p
+       WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}
+       GROUP BY day ORDER BY day`,
+      md5 ? [tzOffsetSecs, fromSec, toSec, md5] : [tzOffsetSecs, fromSec, toSec],
+    );
+    return rows.map((r) => ({ day: Number(r.day), secs: Number(r.secs) }));
+  }
+
+  /** Total seconds, distinct (book, page) pairs and distinct books in [fromSec, toSec). */
+  async getPeriodTotals(fromSec: number, toSec: number, md5?: string): Promise<PeriodTotals> {
+    const rows = await this.db.select<{ secs: number | null; pages: number; books: number }>(
+      `SELECT SUM(duration) AS secs,
+              (SELECT COUNT(*) FROM (SELECT DISTINCT id_book, page FROM page_stat_data p
+                 WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''})) AS pages,
+              COUNT(DISTINCT id_book) AS books
+       FROM page_stat_data p
+       WHERE p.start_time >= ? AND p.start_time < ? ${md5 ? BOOK_FILTER : ''}`,
+      md5 ? [fromSec, toSec, md5, fromSec, toSec, md5] : [fromSec, toSec, fromSec, toSec],
+    );
+    const r = rows[0];
+    return {
+      secs: Number(r?.secs ?? 0),
+      pages: Number(r?.pages ?? 0),
+      books: Number(r?.books ?? 0),
+    };
+  }
+
+  /** md5s of books whose first-ever read falls in [fromSec, toSec). */
+  async getBooksStartedInPeriod(fromSec: number, toSec: number): Promise<string[]> {
+    const rows = await this.db.select<{ md5: string }>(
+      `SELECT b.md5 AS md5 FROM book b
+       JOIN (SELECT id_book, MIN(start_time) AS first FROM page_stat_data GROUP BY id_book) f
+         ON f.id_book = b.id
+       WHERE f.first >= ? AND f.first < ?`,
+      [fromSec, toSec],
+    );
+    return rows.map((r) => String(r.md5));
+  }
+
+  /** md5s of books with any reading in [fromSec, toSec). */
+  async getBooksReadInPeriod(fromSec: number, toSec: number): Promise<string[]> {
+    const rows = await this.db.select<{ md5: string }>(
+      `SELECT b.md5 AS md5 FROM book b
+       WHERE b.id IN (SELECT DISTINCT id_book FROM page_stat_data WHERE start_time >= ? AND start_time < ?)`,
+      [fromSec, toSec],
+    );
+    return rows.map((r) => String(r.md5));
+  }
+
+  /** All-time figures for one book, or null when it has never been read. */
+  async getBookSummary(md5: string, tzOffsetSecs: number): Promise<BookSummary | null> {
+    const rows = await this.db.select<{
+      secs: number | null;
+      days: number;
+      first: number | null;
+      last: number | null;
+      pages: number;
+    }>(
+      `SELECT SUM(p.duration) AS secs,
+              COUNT(DISTINCT (p.start_time + ?) / 86400) AS days,
+              MIN(p.start_time) AS first,
+              MAX(p.start_time + p.duration) AS last,
+              COUNT(DISTINCT p.page) AS pages
+       FROM page_stat_data p WHERE 1 = 1 ${BOOK_FILTER}`,
+      [tzOffsetSecs, md5],
+    );
+    const r = rows[0];
+    if (!r || r.first === null) return null;
+    return {
+      totalSecs: Number(r.secs ?? 0),
+      days: Number(r.days),
+      firstRead: Number(r.first),
+      lastRead: Number(r.last),
+      pages: Number(r.pages),
+    };
+  }
+
+  /**
+   * Backfill a reading session (e.g. from another device). Events start at
+   * local noon of `dayStart` (local midnight, epoch secs), after any earlier
+   * manual session of that book on the same day, and use pages after the
+   * book's highest page read so distinct-page counts add up. See
+   * `splitManualSession` for the event layout.
+   */
+  async addManualSession(input: {
+    book: StatBook;
+    dayStart: number;
+    durationSecs: number;
+    pages: number;
+    totalPages: number;
+  }): Promise<void> {
+    const { book, dayStart, durationSecs, pages } = input;
+    const idBook = await this.upsertBook(book);
+    const [prior] = await this.db.select<{ end: number | null }>(
+      `SELECT MAX(start_time + duration) AS end FROM readest_manual_session
+       WHERE book_hash = ? AND start_time >= ? AND start_time < ?`,
+      [book.bookMd5, dayStart, dayStart + 86400],
+    );
+    const startTime = Math.max(dayStart + 12 * 3600, Number(prior?.end ?? 0));
+    const [known] = await this.db.select<{ maxPage: number | null; pages: number | null }>(
+      `SELECT (SELECT MAX(page) FROM page_stat_data WHERE id_book = ?) AS maxPage,
+              (SELECT total_pages FROM page_stat_data WHERE id_book = ? ORDER BY start_time DESC LIMIT 1) AS pages`,
+      [idBook, idBook],
+    );
+    const firstPage = Number(known?.maxPage ?? 0) + 1;
+    const events = splitManualSession({ startTime, durationSecs, pages, firstPage });
+    const lastPage = firstPage + events.length - 1;
+    const totalPages = Math.max(input.totalPages, Number(known?.pages ?? 0), lastPage);
+    // One multi-row statement: a session can hold hundreds of page events.
+    await this.db.execute(
+      `INSERT INTO page_stat_data (id_book, page, start_time, duration, total_pages)
+       VALUES ${events.map(() => '(?, ?, ?, ?, ?)').join(', ')}
+       ON CONFLICT(id_book, page, start_time)
+       DO UPDATE SET duration = max(duration, excluded.duration), total_pages = excluded.total_pages`,
+      events.flatMap((e) => [idBook, e.page, e.startTime, e.duration, totalPages]),
+    );
+    await this.db.execute(
+      `INSERT INTO readest_manual_session (book_hash, start_time, duration, pages, first_page, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [book.bookMd5, startTime, durationSecs, pages, firstPage, Date.now()],
+    );
+    await this.recomputeBookTotals(idBook);
+  }
+
+  /** Manually added sessions of a book, newest first. */
+  async getManualSessions(md5: string): Promise<ManualSession[]> {
+    const rows = await this.db.select<{
+      id: number;
+      start_time: number;
+      duration: number;
+      pages: number;
+    }>(
+      `SELECT id, start_time, duration, pages FROM readest_manual_session
+       WHERE book_hash = ? ORDER BY start_time DESC`,
+      [md5],
+    );
+    return rows.map((r) => ({
+      id: Number(r.id),
+      startTime: Number(r.start_time),
+      durationSecs: Number(r.duration),
+      pages: Number(r.pages),
+    }));
+  }
+
+  /** Delete a manual session and exactly the events it wrote. */
+  async deleteManualSession(id: number): Promise<void> {
+    const [s] = await this.db.select<{
+      book_hash: string;
+      start_time: number;
+      duration: number;
+      pages: number;
+      first_page: number;
+    }>(
+      `SELECT book_hash, start_time, duration, pages, first_page FROM readest_manual_session WHERE id = ?`,
+      [id],
+    );
+    if (!s) return;
+    const book = await this.getBookByMd5(s.book_hash);
+    if (book) {
+      // Re-derive the keys splitManualSession produced: page first_page + i
+      // starts at start_time + i * floor(duration / count).
+      const count = Math.max(1, Number(s.pages));
+      const each = Math.floor(Number(s.duration) / count);
+      const firstPage = Number(s.first_page);
+      await this.db.execute(
+        `DELETE FROM page_stat_data
+         WHERE id_book = ? AND page BETWEEN ? AND ? AND start_time = ? + (page - ?) * ?`,
+        [book.id, firstPage, firstPage + count - 1, Number(s.start_time), firstPage, each],
+      );
+    }
+    await this.db.execute(`DELETE FROM readest_manual_session WHERE id = ?`, [id]);
+    if (book) await this.recomputeBookTotals(book.id);
   }
 
   async getBookByMd5(md5: string): Promise<BookRow | null> {

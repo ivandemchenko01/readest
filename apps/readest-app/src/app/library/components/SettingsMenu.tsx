@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PiUserCircle, PiUserCircleCheck, PiGear, PiStar } from 'react-icons/pi';
+import { PiUserCircle, PiUserCircleCheck, PiGear, PiStar, PiChartLine } from 'react-icons/pi';
 import { PiSun, PiMoon } from 'react-icons/pi';
 import { TbSunMoon } from 'react-icons/tb';
 import { MdCloudSync, MdSync, MdSyncProblem, MdOutlineSensors } from 'react-icons/md';
@@ -246,6 +246,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onPullLibrary, setIsDropdow
     setSavedBookCoverForLockScreen(newValue);
   };
 
+  const openReadingStatistics = () => {
+    setIsDropdownOpen?.(false);
+    router.push('/statistics');
+  };
+
   const handleSyncLibrary = () => {
     onPullLibrary(true, true);
     setIsDropdownOpen?.(false);
@@ -420,6 +425,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onPullLibrary, setIsDropdow
       />
       <MenuItem label={_('My Ratings')} Icon={PiStar} onClick={openRatings} />
       <MenuItem label={_('Settings')} Icon={PiGear} onClick={openSettingsDialog} />
+      <MenuItem
+        label={_('Reading Statistics')}
+        Icon={PiChartLine}
+        onClick={openReadingStatistics}
+      />
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem label={_('Advanced Settings')}>
         <ul className='ms-0 flex flex-col ps-0 before:hidden'>
