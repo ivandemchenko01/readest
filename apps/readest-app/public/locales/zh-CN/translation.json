@@ -915,10 +915,8 @@
   "Actions": "操作",
   "Navigation": "导航",
   "Set status for {{count}} book(s)_other": "设置 {{count}} 本书的状态",
-  "Mark as Unread": "标记为未读",
   "Mark as Finished": "标记为已读",
   "Finished": "已读",
-  "Unread": "未读",
   "Clear Status": "清除状态",
   "Status": "状态",
   "Loading": "正在加载",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "无法关联阅读器。请检查代码，或在阅读器上重新登录。",
   "Link Reader": "关联阅读器",
   "Failed to copy the image": "图片复制失败",
-  "Copy Image": "复制图片"
+  "Copy Image": "复制图片",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

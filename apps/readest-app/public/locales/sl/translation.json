@@ -60,7 +60,6 @@
   "Select Book": "Izberi knjigo",
   "Group Books": "Združi knjige",
   "Mark as Finished": "Označi kot prebrano",
-  "Mark as Unread": "Označi kot neprebrano",
   "Clear Status": "Počisti status",
   "Delete": "Izbriši",
   "Deselect Group": "Odizberi skupino",
@@ -118,7 +117,6 @@
   "Restart App": "Ponovni zagon aplikacije",
   "Start Migration": "Začni migracijo",
   "Finished": "Dokončano",
-  "Unread": "Neprebrano",
   "Open": "Odpri",
   "Status": "Status",
   "Details": "Podrobnosti",
@@ -2647,5 +2645,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Bralnika ni bilo mogoče povezati. Preverite kodo ali se znova prijavite na bralniku.",
   "Link Reader": "Poveži bralnik",
   "Failed to copy the image": "Slike ni bilo mogoče kopirati",
-  "Copy Image": "Kopiraj sliko"
+  "Copy Image": "Kopiraj sliko",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

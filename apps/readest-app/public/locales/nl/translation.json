@@ -926,10 +926,8 @@
   "Navigation": "Navigatie",
   "Set status for {{count}} book(s)_one": "Stel status in voor {{count}} boek",
   "Set status for {{count}} book(s)_other": "Stel status in voor {{count}} boeken",
-  "Mark as Unread": "Markeren als ongelezen",
   "Mark as Finished": "Markeren als voltooid",
   "Finished": "Voltooid",
-  "Unread": "Ongelezen",
   "Clear Status": "Status wissen",
   "Status": "Status",
   "Loading": "Laden...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Kan de e-reader niet koppelen. Controleer de code of log opnieuw in op de e-reader.",
   "Link Reader": "E-reader koppelen",
   "Failed to copy the image": "Kan de afbeelding niet kopiëren",
-  "Copy Image": "Afbeelding kopiëren"
+  "Copy Image": "Afbeelding kopiëren",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

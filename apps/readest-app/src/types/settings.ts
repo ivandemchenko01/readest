@@ -2,7 +2,13 @@ import type { BookshelfState } from './bookshelf';
 import { CustomTheme } from '@/styles/themes';
 import { CustomFont } from '@/styles/fonts';
 import { CustomTexture } from '@/styles/textures';
-import { HighlightColor, HighlightStyle, UserHighlightColor, ViewSettings } from './book';
+import {
+  BookStatusCategory,
+  HighlightColor,
+  HighlightStyle,
+  UserHighlightColor,
+  ViewSettings,
+} from './book';
 import { OPDSCatalog } from './opds';
 import { WebSource } from './webSource';
 import { ABSServer } from './audiobookshelf';
@@ -37,6 +43,8 @@ export type LibrarySortByType = (typeof LibrarySortByType)[keyof typeof LibraryS
 export type LibrarySecondarySortByType = LibrarySortByType | 'none';
 
 export type LibraryCoverFitType = 'crop' | 'fit';
+/** Library status filter: one UI status, or 'all' (no filter). */
+export type LibraryStatusFilterType = 'all' | BookStatusCategory;
 
 export const LibraryGroupByType = {
   None: 'none',
@@ -488,6 +496,7 @@ export interface SystemSettings {
   /** Sort order of the secondary ("Then by") key, independent of `librarySortAscending` (#5119). */
   libraryThenSortAscending: boolean;
   libraryGroupBy: LibraryGroupByType;
+  libraryStatusFilter: LibraryStatusFilterType;
   libraryCoverFit: LibraryCoverFitType;
   libraryAutoColumns: boolean;
   libraryColumns: number;

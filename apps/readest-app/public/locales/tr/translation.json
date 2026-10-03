@@ -926,10 +926,8 @@
   "Navigation": "Gezinme",
   "Set status for {{count}} book(s)_one": "{{count}} kitap için durumu ayarla",
   "Set status for {{count}} book(s)_other": "{{count}} kitap için durumu ayarla",
-  "Mark as Unread": "Okunmadı olarak işaretle",
   "Mark as Finished": "Bitirildi olarak işaretle",
   "Finished": "Bitirildi",
-  "Unread": "Okunmadı",
   "Clear Status": "Durumu Temizle",
   "Status": "Durum",
   "Loading": "Yükleniyor...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Okuyucu bağlanamadı. Kodu kontrol edin veya okuyucuda yeniden oturum açın.",
   "Link Reader": "Okuyucuyu bağla",
   "Failed to copy the image": "Görsel kopyalanamadı",
-  "Copy Image": "Görseli Kopyala"
+  "Copy Image": "Görseli Kopyala",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

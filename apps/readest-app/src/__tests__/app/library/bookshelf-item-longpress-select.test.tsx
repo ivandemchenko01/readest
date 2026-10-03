@@ -21,6 +21,12 @@ vi.mock('@tauri-apps/api/menu', () => ({
   MenuItem: { new: vi.fn(async (options: { text: string }) => ({ ...options, close: vi.fn() })) },
 }));
 
+// The in-app menu claims the Android back key through the native bridge.
+vi.mock('@/utils/bridge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/utils/bridge')>()),
+  interceptKeys: vi.fn(async () => {}),
+}));
+
 vi.mock('@tauri-apps/plugin-opener', () => ({
   revealItemInDir: vi.fn(),
 }));
@@ -72,7 +78,15 @@ const book: Book = {
  * Mirrors the library page: select mode and the selected set live above the
  * item, so every toggle re-renders it with new props.
  */
-const Harness = ({ onToggle }: { onToggle: (id: string) => void }) => {
+const Harness = ({
+  onToggle,
+  onStatus = vi.fn(),
+  onDetails = vi.fn(),
+}: {
+  onToggle: (id: string) => void;
+  onStatus?: (book: Book, status: string | undefined) => void;
+  onDetails?: (book: Book) => void;
+}) => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selected, setSelected] = useState(false);
   return (
@@ -93,9 +107,9 @@ const Harness = ({ onToggle }: { onToggle: (id: string) => void }) => {
       handleBookUpload={vi.fn(async () => true)}
       handleBookDelete={vi.fn(async () => true)}
       handleSetSelectMode={setIsSelectMode}
-      handleShowDetailsBook={vi.fn()}
+      handleShowDetailsBook={onDetails}
       handleLibraryNavigation={vi.fn()}
-      handleUpdateReadingStatus={vi.fn()}
+      handleUpdateReadingStatus={onStatus}
       showTimeRemaining={false}
     />
   );
@@ -103,7 +117,14 @@ const Harness = ({ onToggle }: { onToggle: (id: string) => void }) => {
 
 const getItem = () => screen.getByRole('button', { name: 'Test Book' });
 
-describe('long-press selection on Android (issue #5596)', () => {
+const longPress = (item: HTMLElement, pointerId = 1) => {
+  fireEvent.pointerDown(item, { pointerId, clientX: 50, clientY: 50 });
+  act(() => void vi.advanceTimersByTime(500));
+  fireEvent.pointerUp(item, { pointerId, clientX: 50, clientY: 50 });
+  act(() => void vi.advanceTimersByTime(500));
+};
+
+describe('long-press on a book on mobile opens the in-app action menu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -114,61 +135,110 @@ describe('long-press selection on Android (issue #5596)', () => {
     cleanup();
   });
 
-  it('selects once when the WebView fires contextmenu after the long-press timer', () => {
-    const onToggle = vi.fn();
-    render(<Harness onToggle={onToggle} />);
-    const item = getItem();
+  it('shows the status actions, Details and Select', () => {
+    render(<Harness onToggle={vi.fn()} />);
+    longPress(getItem());
 
-    fireEvent.pointerDown(item, { pointerId: 1, clientX: 50, clientY: 50 });
-    // Our own long-press timer wins the race and selects the book.
-    act(() => void vi.advanceTimersByTime(500));
-    expect(onToggle).toHaveBeenCalledTimes(1);
-
-    // The WebView's native long-press callout lands a moment later, still
-    // within the same press.
-    fireEvent.contextMenu(item, { clientX: 50, clientY: 50 });
-    act(() => void vi.advanceTimersByTime(500));
-
-    expect(onToggle).toHaveBeenCalledTimes(1);
-
-    // Lifting the finger must not count as a tap either.
-    fireEvent.pointerUp(item, { pointerId: 1, clientX: 50, clientY: 50 });
-    act(() => void vi.advanceTimersByTime(500));
-    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual([
+      'Mark as Want to Read',
+      'Mark as Reading',
+      'Mark as Finished',
+      'Mark as On hold',
+      'Details',
+      'Select',
+    ]);
   });
 
-  it('selects once when the WebView fires contextmenu before the long-press timer', () => {
+  it('opens once when the WebView fires contextmenu after the long-press timer (#5596)', () => {
     const onToggle = vi.fn();
     render(<Harness onToggle={onToggle} />);
     const item = getItem();
 
     fireEvent.pointerDown(item, { pointerId: 1, clientX: 50, clientY: 50 });
-    act(() => void vi.advanceTimersByTime(300));
+    act(() => void vi.advanceTimersByTime(500));
+    expect(screen.getAllByRole('menuitem')).toHaveLength(6);
+
+    // The WebView's native long-press callout lands a moment later.
     fireEvent.contextMenu(item, { clientX: 50, clientY: 50 });
     act(() => void vi.advanceTimersByTime(500));
-
-    expect(onToggle).toHaveBeenCalledTimes(1);
-
     fireEvent.pointerUp(item, { pointerId: 1, clientX: 50, clientY: 50 });
     act(() => void vi.advanceTimersByTime(500));
-    expect(onToggle).toHaveBeenCalledTimes(1);
+
+    expect(screen.getAllByRole('menuitem')).toHaveLength(6);
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
-  it('still toggles on a plain tap once select mode is on', () => {
+  it('sets the status through the shared handler and closes the menu', () => {
+    const onStatus = vi.fn();
+    render(<Harness onToggle={vi.fn()} onStatus={onStatus} />);
+    longPress(getItem());
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Mark as Reading' }));
+
+    expect(onStatus).toHaveBeenCalledWith(book, 'reading');
+    expect(screen.queryByRole('menuitem')).toBeNull();
+  });
+
+  it('enters select mode from "Select", then plain taps toggle the selection', () => {
     const onToggle = vi.fn();
     render(<Harness onToggle={onToggle} />);
-    const item = getItem();
+    longPress(getItem());
 
-    fireEvent.pointerDown(item, { pointerId: 1, clientX: 50, clientY: 50 });
-    act(() => void vi.advanceTimersByTime(500));
-    fireEvent.pointerUp(item, { pointerId: 1, clientX: 50, clientY: 50 });
-    act(() => void vi.advanceTimersByTime(500));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Select' }));
     expect(onToggle).toHaveBeenCalledTimes(1);
 
-    fireEvent.pointerDown(item, { pointerId: 2, clientX: 50, clientY: 50 });
-    fireEvent.pointerUp(item, { pointerId: 2, clientX: 50, clientY: 50 });
+    fireEvent.pointerDown(getItem(), { pointerId: 2, clientX: 50, clientY: 50 });
+    fireEvent.pointerUp(getItem(), { pointerId: 2, clientX: 50, clientY: 50 });
     act(() => void vi.advanceTimersByTime(500));
     expect(onToggle).toHaveBeenCalledTimes(2);
+
+    // In select mode a long press keeps toggling instead of opening the menu.
+    longPress(getItem(), 3);
+    expect(onToggle).toHaveBeenCalledTimes(3);
+    expect(screen.queryByRole('menuitem')).toBeNull();
+  });
+
+  it('still selects a group once on long press, even with a late contextmenu (#5596)', () => {
+    const onSelection = vi.fn();
+    const group: BooksGroup = {
+      id: 'fiction',
+      name: 'Fiction',
+      displayName: 'Fiction',
+      books: [book],
+      updatedAt: 0,
+    };
+    render(
+      <BookshelfItem
+        mode='grid'
+        item={group}
+        coverFit='crop'
+        isSelectMode={false}
+        itemSelected={false}
+        transferProgress={null}
+        setLoading={vi.fn()}
+        toggleSelection={onSelection}
+        handleGroupBooks={vi.fn()}
+        handleBookDownload={vi.fn(async () => true)}
+        handleBookUpload={vi.fn(async () => true)}
+        handleBookDelete={vi.fn(async () => true)}
+        handleSetSelectMode={vi.fn()}
+        handleShowDetailsBook={vi.fn()}
+        handleLibraryNavigation={vi.fn()}
+        handleUpdateReadingStatus={vi.fn()}
+        showTimeRemaining={false}
+      />,
+    );
+    const card = screen.getByRole('button', { name: 'Fiction' });
+
+    fireEvent.pointerDown(card, { pointerId: 1, clientX: 50, clientY: 50 });
+    act(() => void vi.advanceTimersByTime(500));
+    fireEvent.contextMenu(card, { clientX: 50, clientY: 50 });
+    act(() => void vi.advanceTimersByTime(500));
+    fireEvent.pointerUp(card, { pointerId: 1, clientX: 50, clientY: 50 });
+    act(() => void vi.advanceTimersByTime(500));
+
+    expect(onSelection).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menuitem')).toBeNull();
   });
 
   it.each(['added', 'removed'])('selects current group members after a book is %s', (change) => {

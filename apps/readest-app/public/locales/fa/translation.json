@@ -926,10 +926,8 @@
   "Navigation": "ناوبری",
   "Set status for {{count}} book(s)_one": "تعیین وضعیت برای {{count}} کتاب",
   "Set status for {{count}} book(s)_other": "تعیین وضعیت برای {{count}} کتاب",
-  "Mark as Unread": "علامت‌گذاری به‌عنوان خوانده‌نشده",
   "Mark as Finished": "علامت‌گذاری به‌عنوان تمام‌شده",
   "Finished": "تمام‌شده",
-  "Unread": "خوانده‌نشده",
   "Clear Status": "پاک کردن وضعیت",
   "Status": "وضعیت",
   "Loading": "در حال بارگذاری...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "پیوند دادن کتاب‌خوان ممکن نشد. کد را بررسی کنید یا دوباره روی کتاب‌خوان وارد شوید.",
   "Link Reader": "پیوند دادن کتاب‌خوان",
   "Failed to copy the image": "کپی تصویر ناموفق بود",
-  "Copy Image": "کپی تصویر"
+  "Copy Image": "کپی تصویر",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

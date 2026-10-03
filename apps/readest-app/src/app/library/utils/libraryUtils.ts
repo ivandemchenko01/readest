@@ -1,12 +1,14 @@
-import { Book, BooksGroup, ReadingStatus } from '@/types/book';
+import { Book, BooksGroup, BookStatusCategory, ReadingStatus } from '@/types/book';
 import {
   LibraryGroupByType,
   LibrarySecondarySortByType,
   LibrarySortByType,
+  type LibraryStatusFilterType,
 } from '@/types/settings';
 import {
   formatAuthors,
   formatTitle,
+  getBookStatusCategory,
   getContributorNames,
   isCurrentlyReadingBook,
 } from '@/utils/book';
@@ -24,20 +26,57 @@ const VALID_SORT_TYPES: LibrarySortByType[] = Object.values(LibrarySortByType);
 const VALID_GROUP_BY_TYPES: LibraryGroupByType[] = Object.values(LibraryGroupByType);
 
 /**
- * Group labels for `groupBy=status`. These are i18n *keys*, not display text:
- * `stubTranslation` only registers them for extraction, and the rendering
- * component applies the real `_()` (see docs/i18n.md). Keys match the ones the
- * status UI already ships, so every locale translates these for free.
+ * Labels for the UI reading statuses (`groupBy=status`, the library status
+ * filter). These are i18n *keys*, not display text: `stubTranslation` only
+ * registers them for extraction, and the rendering component applies the real
+ * `_()` (see docs/i18n.md).
  *
- * Typed as a total `Record<ReadingStatus, string>` on purpose: a fifth reading
- * status can't be added without also giving it a label here.
+ * Typed as a total `Record` on purpose: a new status can't be added without
+ * also giving it a label here. The stored 'unread' value is the explicit
+ * "Want to Read" flag; 'none' is a book with no status and no progress.
  */
-const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
-  unread: _('Unread'),
+export const BOOK_STATUS_LABELS: Record<BookStatusCategory, string> = {
+  unread: _('Want to Read'),
   reading: _('Reading'),
   finished: _('Finished'),
   abandoned: _('On hold'),
+  none: _('No status'),
 };
+
+const LIBRARY_STATUS_FILTERS: LibraryStatusFilterType[] = [
+  'all',
+  'reading',
+  'unread',
+  'finished',
+  'abandoned',
+  'none',
+];
+
+export { getBookStatusCategory };
+
+/** Count books per UI status (plus the total) in a single pass. */
+export const countBooksByStatus = (books: Book[]): Record<LibraryStatusFilterType, number> => {
+  const counts: Record<LibraryStatusFilterType, number> = {
+    all: books.length,
+    reading: 0,
+    unread: 0,
+    finished: 0,
+    abandoned: 0,
+    none: 0,
+  };
+  for (const book of books) {
+    const status: LibraryStatusFilterType = getBookStatusCategory(book);
+    counts[status]++;
+  }
+  return counts;
+};
+
+/** Keep the books of one UI status; 'all' returns the input array unchanged. */
+export const filterBooksByStatus = (books: Book[], filter: LibraryStatusFilterType): Book[] =>
+  filter === 'all' ? books : books.filter((book) => getBookStatusCategory(book) === filter);
+
+export const ensureLibraryStatusFilter = (value: string | null | undefined) =>
+  LIBRARY_STATUS_FILTERS.find((filter) => filter === value) ?? 'all';
 
 /**
  * Safely cast a query parameter to LibrarySortByType with fallback.
@@ -617,19 +656,12 @@ export const createBookGroups = (
       'status',
       // `readingStatus` is an optional annotation, not a lifecycle field:
       // nothing stamps it at import, and opening a book *clears* 'unread' back
-      // to `undefined`. Grouping on it alone therefore partitions badly — on a
-      // real 750-book library it dropped 414 never-opened books out of the
-      // shelf entirely and left "Unread" holding the 1 book that had been
-      // manually re-marked. So derive both ends instead: 'reading' from the
-      // predicate the recently-read shelf and home-screen widget already share
-      // (#1010 asks for exactly that shelf), and 'unread' as the resting state
-      // for a book with no status and no progress. Every book lands in exactly
-      // one bucket and nothing is left ungrouped.
-      (book) =>
-        isCurrentlyReadingBook(book)
-          ? ['reading' satisfies ReadingStatus]
-          : [book.readingStatus ?? ('unread' satisfies ReadingStatus)],
-      (status) => READING_STATUS_LABELS[status as ReadingStatus] ?? status,
+      // to `undefined`. So bucket by the derived UI status instead: explicit
+      // statuses as-is, progress without a status as Reading, and the rest as
+      // "No status". Every book lands in exactly one bucket and nothing is
+      // left ungrouped; the buckets match the library status filter.
+      (book) => [getBookStatusCategory(book)],
+      (status) => BOOK_STATUS_LABELS[status as BookStatusCategory] ?? status,
     );
   }
 
@@ -995,8 +1027,9 @@ export const createGroupSorter =
 export type BookContextMenuItemId =
   | 'select'
   | 'group'
-  | 'markFinished'
   | 'markUnread'
+  | 'markReading'
+  | 'markFinished'
   | 'markAbandoned'
   | 'clearStatus'
   | 'showDetails'
@@ -1111,6 +1144,35 @@ export const pickFresherMetadata = (
   };
 };
 
+const STATUS_MENU_ITEMS: [BookStatusCategory, BookContextMenuItemId][] = [
+  ['unread', 'markUnread'],
+  ['reading', 'markReading'],
+  ['finished', 'markFinished'],
+  ['abandoned', 'markAbandoned'],
+];
+
+/**
+ * Status actions for a book: every "Mark as …" except its current UI status,
+ * then "Clear Status" when an explicit status is set.
+ */
+const getStatusMenuItemIds = (book: Book): BookContextMenuItemId[] => {
+  const current = getBookStatusCategory(book);
+  const ids = STATUS_MENU_ITEMS.filter(([status]) => status !== current).map(([, id]) => id);
+  if (book.readingStatus) ids.push('clearStatus');
+  return ids;
+};
+
+/**
+ * The compact long-press menu on mobile, where there is no native context
+ * menu: status actions, details, then "Select" to enter multi-select mode
+ * (what a long press used to do directly).
+ */
+export const getMobileBookContextMenuItemIds = (book: Book): BookContextMenuItemId[] => [
+  ...getStatusMenuItemIds(book),
+  'showDetails',
+  'select',
+];
+
 /**
  * Resolve the ordered list of context-menu item ids for a book from its state.
  *
@@ -1123,17 +1185,7 @@ export const getBookContextMenuItemIds = (
   book: Book,
   opts?: { localSend?: boolean; absOffline?: boolean },
 ): BookContextMenuItemId[] => {
-  const ids: BookContextMenuItemId[] = ['select', 'group'];
-  ids.push(book.readingStatus === 'finished' ? 'markUnread' : 'markFinished');
-  if (book.readingStatus !== 'abandoned') ids.push('markAbandoned');
-  // "Clear Status" is offered only when the book has an explicit status set.
-  if (
-    book.readingStatus === 'finished' ||
-    book.readingStatus === 'unread' ||
-    book.readingStatus === 'abandoned'
-  ) {
-    ids.push('clearStatus');
-  }
+  const ids: BookContextMenuItemId[] = ['select', 'group', ...getStatusMenuItemIds(book)];
   ids.push('showDetails', 'showInFinder', 'searchGoodreads');
   // A feed book has no file to move: every transfer action would fail, and the
   // share dialog uploads before it can hand out a link (issue #5307).

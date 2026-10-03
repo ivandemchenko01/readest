@@ -23,19 +23,24 @@ const SetStatusAlert: React.FC<SetStatusAlertProps> = ({
 
   const statusButtons = [
     {
-      label: _('Mark as Unread'),
+      label: _('Want to Read'),
       status: 'unread' as ReadingStatus,
       className:
         'not-eink:bg-amber-500/15 not-eink:text-amber-600 dark:not-eink:text-amber-400 not-eink:border-amber-500/20 eink-bordered',
     },
     {
-      label: _('Mark as Finished'),
+      label: _('Reading'),
+      status: 'reading' as ReadingStatus,
+      className: 'not-eink:bg-info/15 not-eink:text-info not-eink:border-info/20 eink-bordered',
+    },
+    {
+      label: _('Finished'),
       status: 'finished' as ReadingStatus,
       className:
         'not-eink:bg-success/15 not-eink:text-success not-eink:border-success/20 eink-bordered',
     },
     {
-      label: _('Mark as On hold'),
+      label: _('On hold'),
       status: 'abandoned' as ReadingStatus,
       className:
         'not-eink:bg-slate-500/15 not-eink:text-slate-600 dark:not-eink:text-slate-300 not-eink:border-slate-500/20 eink-bordered',
@@ -86,7 +91,7 @@ const SetStatusAlert: React.FC<SetStatusAlertProps> = ({
               key={label}
               className={clsx(
                 'flex items-center gap-2 rounded-full border px-4 py-2',
-                'shadow-xs transition-all duration-200 ease-out active:scale-[0.97]',
+                'not-eink:shadow-xs not-eink:transition-all duration-200 ease-out not-eink:active:scale-[0.97]',
                 className,
               )}
               onClick={() => onUpdateStatus(status)}
@@ -99,7 +104,7 @@ const SetStatusAlert: React.FC<SetStatusAlertProps> = ({
               'hidden items-center gap-2 rounded-full border px-4 py-2',
               'not-eink:bg-base-300 not-eink:text-base-content not-eink:border-base-content/10 not-eink:shadow-xs',
               'eink-bordered',
-              'transition-all duration-200 ease-out active:scale-[0.97]',
+              'not-eink:transition-all duration-200 ease-out not-eink:active:scale-[0.97]',
               'sm:flex',
             )}
             onClick={onCancel}

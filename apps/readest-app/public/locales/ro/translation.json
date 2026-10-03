@@ -74,7 +74,6 @@
   "Select Book": "Selectați Carte",
   "Group Books": "Cărți de grup",
   "Mark as Finished": "Marcați ca finalizat",
-  "Mark as Unread": "Marcați ca necitit",
   "Clear Status": "Ștergeți starea",
   "Delete": "Şterge",
   "Deselect Group": "Deselectați Grup",
@@ -129,7 +128,6 @@
   "Restart App": "Reporniți aplicația",
   "Start Migration": "Începeți migrarea",
   "Finished": "Terminat",
-  "Unread": "Necitit",
   "Open": "Deschide",
   "Status": "Stare",
   "Details": "Detalii",
@@ -2583,5 +2581,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Cititorul nu a putut fi conectat. Verificați codul sau autentificați-vă din nou pe cititor.",
   "Link Reader": "Conectați cititorul",
   "Failed to copy the image": "Copierea imaginii a eșuat",
-  "Copy Image": "Copiază imaginea"
+  "Copy Image": "Copiază imaginea",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

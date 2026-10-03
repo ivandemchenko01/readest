@@ -914,10 +914,8 @@
   "Actions": "작업",
   "Navigation": "탐색",
   "Set status for {{count}} book(s)_other": "책 {{count}}권 상태 설정",
-  "Mark as Unread": "읽지 않음으로 표시",
   "Mark as Finished": "완료로 표시",
   "Finished": "완료",
-  "Unread": "읽지 않음",
   "Clear Status": "상태 지우기",
   "Status": "상태",
   "Loading": "로드 중...",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "리더를 연결하지 못했습니다. 코드를 확인하거나 리더에서 다시 로그인하세요.",
   "Link Reader": "리더 연결",
   "Failed to copy the image": "이미지를 복사하지 못했습니다",
-  "Copy Image": "이미지 복사"
+  "Copy Image": "이미지 복사",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

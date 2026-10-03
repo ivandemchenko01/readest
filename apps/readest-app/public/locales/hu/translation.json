@@ -73,7 +73,6 @@
   "Select Book": "Könyv kiválasztása",
   "Group Books": "Könyvek csoportosítása",
   "Mark as Finished": "Megjelölés befejezettként",
-  "Mark as Unread": "Megjelölés olvasatlanként",
   "Clear Status": "Állapot törlése",
   "Delete": "Törlés",
   "Deselect Group": "Csoport kijelölésének megszüntetése",
@@ -127,7 +126,6 @@
   "Restart App": "Alkalmazás újraindítása",
   "Start Migration": "Áttelepítés indítása",
   "Finished": "Befejezett",
-  "Unread": "Olvasatlan",
   "Open": "Megnyitás",
   "Status": "Állapot",
   "Details": "Részletek",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Nem sikerült összekapcsolni az olvasót. Ellenőrizze a kódot, vagy jelentkezzen be újra az olvasón.",
   "Link Reader": "Olvasó összekapcsolása",
   "Failed to copy the image": "Nem sikerült másolni a képet",
-  "Copy Image": "Kép másolása"
+  "Copy Image": "Kép másolása",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

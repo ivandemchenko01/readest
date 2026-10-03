@@ -914,10 +914,8 @@
   "Actions": "การกระทำ",
   "Navigation": "การนำทาง",
   "Set status for {{count}} book(s)_other": "ตั้งสถานะสำหรับหนังสือ {{count}} เล่ม",
-  "Mark as Unread": "ทำเครื่องหมายว่ายังไม่อ่าน",
   "Mark as Finished": "ทำเครื่องหมายว่าอ่านจบแล้ว",
   "Finished": "อ่านจบแล้ว",
-  "Unread": "ยังไม่ได้อ่าน",
   "Clear Status": "ล้างสถานะ",
   "Status": "สถานะ",
   "Loading": "กำลังโหลด...",
@@ -2455,5 +2453,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "ไม่สามารถเชื่อมโยงเครื่องอ่านได้ ตรวจสอบรหัส หรือลงชื่อเข้าใช้บนเครื่องอ่านอีกครั้ง",
   "Link Reader": "เชื่อมโยงเครื่องอ่าน",
   "Failed to copy the image": "ไม่สามารถคัดลอกรูปภาพได้",
-  "Copy Image": "คัดลอกรูปภาพ"
+  "Copy Image": "คัดลอกรูปภาพ",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

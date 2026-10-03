@@ -937,10 +937,8 @@
   "Navigation": "Navigation",
   "Set status for {{count}} book(s)_one": "Définir le statut pour {{count}} livre",
   "Set status for {{count}} book(s)_other": "Définir le statut pour {{count}} livres",
-  "Mark as Unread": "Marquer comme non lu",
   "Mark as Finished": "Marquer comme terminé",
   "Finished": "Terminé",
-  "Unread": "Non lu",
   "Clear Status": "Effacer le statut",
   "Status": "Statut",
   "Set status for {{count}} book(s)_many": "Définir le statut pour {{count}} livres",
@@ -2583,5 +2581,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Impossible d'associer la liseuse. Vérifiez le code ou reconnectez-vous sur la liseuse.",
   "Link Reader": "Associer la liseuse",
   "Failed to copy the image": "Échec de la copie de l'image",
-  "Copy Image": "Copier l'image"
+  "Copy Image": "Copier l'image",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

@@ -46,6 +46,8 @@ export interface BookContextMenuItem {
 interface BookContextMenuPopupProps {
   position: Point;
   items: BookContextMenuItem[];
+  /** Long-press menu on a touch screen: large rows, and ignore the press's own late contextmenu. */
+  touch?: boolean;
   onClose: () => void;
 }
 
@@ -60,6 +62,7 @@ interface BookContextMenuPopupProps {
 const BookContextMenuPopup: React.FC<BookContextMenuPopupProps> = ({
   position,
   items,
+  touch,
   onClose,
 }) => {
   const { safeAreaInsets: insets } = useThemeStore();
@@ -86,14 +89,28 @@ const BookContextMenuPopup: React.FC<BookContextMenuPopupProps> = ({
 
   return (
     <ModalPortal showOverlay={false}>
-      <Overlay onDismiss={onClose} className='z-0' />
+      {/* On Android the WebView's native long-press `contextmenu` can land on
+          the overlay that just opened under the finger; it must not dismiss
+          the menu the same press opened. A tap still does. */}
+      <div
+        onContextMenuCapture={
+          touch
+            ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            : undefined
+        }
+      >
+        <Overlay onDismiss={onClose} className='z-0' />
+      </div>
       <div
         ref={menuRef}
         className={clsx('absolute z-[1] w-max', !placement && 'invisible')}
         style={{ left: placement?.left ?? 0, top: placement?.top ?? 0 }}
       >
         <Menu
-          className='dropdown-content no-triangle bg-base-100 rounded-box relative! z-[1] mt-0! p-2 shadow-sm'
+          className='dropdown-content no-triangle bg-base-100 rounded-box eink-bordered relative! z-[1] mt-0! p-2 shadow-sm'
           onCancel={onClose}
         >
           {items.map(({ text, action }) => (
@@ -101,6 +118,7 @@ const BookContextMenuPopup: React.FC<BookContextMenuPopupProps> = ({
               key={text}
               noIcon
               label={text}
+              buttonClass={touch ? 'min-h-11' : undefined}
               onClick={() => {
                 onClose();
                 action();

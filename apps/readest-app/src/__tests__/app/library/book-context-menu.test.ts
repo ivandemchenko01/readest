@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { getBookContextMenuItemIds } from '@/app/library/utils/libraryUtils';
+import {
+  getBookContextMenuItemIds,
+  getMobileBookContextMenuItemIds,
+} from '@/app/library/utils/libraryUtils';
 import { buildFeedBookUrl } from '@/services/rss/feedBookUrl';
 import { Book } from '@/types/book';
 
@@ -20,6 +23,8 @@ describe('getBookContextMenuItemIds', () => {
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markUnread',
+      'markReading',
       'markFinished',
       'markAbandoned',
       'showDetails',
@@ -76,12 +81,13 @@ describe('getBookContextMenuItemIds', () => {
     expect(getBookContextMenuItemIds(cloudOnly, { localSend: true })).not.toContain('sendNearby');
   });
 
-  it('shows markUnread + markAbandoned + clearStatus for a finished book', () => {
+  it('hides markFinished and offers clearStatus for a finished book', () => {
     const book = createBook({ downloadedAt: 1, readingStatus: 'finished' });
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
       'markUnread',
+      'markReading',
       'markAbandoned',
       'clearStatus',
       'showDetails',
@@ -93,11 +99,12 @@ describe('getBookContextMenuItemIds', () => {
     ]);
   });
 
-  it('shows "Mark as Finished" + "Clear Status" for an unread book', () => {
+  it('hides "Mark as Want to Read" and offers "Clear Status" for a want-to-read book', () => {
     const book = createBook({ downloadedAt: 1, readingStatus: 'unread' });
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markReading',
       'markFinished',
       'markAbandoned',
       'clearStatus',
@@ -110,11 +117,13 @@ describe('getBookContextMenuItemIds', () => {
     ]);
   });
 
-  it('hides markAbandoned but offers markFinished + clearStatus for an abandoned book', () => {
+  it('hides markAbandoned but offers the other statuses + clearStatus for an abandoned book', () => {
     const book = createBook({ downloadedAt: 1, readingStatus: 'abandoned' });
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markUnread',
+      'markReading',
       'markFinished',
       'clearStatus',
       'showDetails',
@@ -131,6 +140,8 @@ describe('getBookContextMenuItemIds', () => {
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markUnread',
+      'markReading',
       'markFinished',
       'markAbandoned',
       'showDetails',
@@ -147,6 +158,8 @@ describe('getBookContextMenuItemIds', () => {
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markUnread',
+      'markReading',
       'markFinished',
       'markAbandoned',
       'showDetails',
@@ -167,6 +180,8 @@ describe('getBookContextMenuItemIds', () => {
     expect(getBookContextMenuItemIds(book)).toEqual([
       'select',
       'group',
+      'markUnread',
+      'markReading',
       'markFinished',
       'markAbandoned',
       'showDetails',
@@ -182,5 +197,54 @@ describe('getBookContextMenuItemIds', () => {
     const second = getBookContextMenuItemIds(book);
     expect(second).toEqual(first);
     expect(new Set(first).size).toBe(first.length);
+  });
+
+  it('hides markReading and offers clearStatus for an explicitly reading book', () => {
+    const book = createBook({ downloadedAt: 1, readingStatus: 'reading' });
+    expect(getBookContextMenuItemIds(book).slice(0, 6)).toEqual([
+      'select',
+      'group',
+      'markUnread',
+      'markFinished',
+      'markAbandoned',
+      'clearStatus',
+    ]);
+  });
+
+  it('treats a statusless book with progress as reading (no clearStatus: nothing to clear)', () => {
+    const book = createBook({ downloadedAt: 1, progress: [10, 100] });
+    expect(getBookContextMenuItemIds(book).slice(0, 6)).toEqual([
+      'select',
+      'group',
+      'markUnread',
+      'markFinished',
+      'markAbandoned',
+      'showDetails',
+    ]);
+  });
+});
+
+describe('getMobileBookContextMenuItemIds', () => {
+  it('lists the status actions, then details, then select', () => {
+    expect(getMobileBookContextMenuItemIds(createBook({ downloadedAt: 1 }))).toEqual([
+      'markUnread',
+      'markReading',
+      'markFinished',
+      'markAbandoned',
+      'showDetails',
+      'select',
+    ]);
+  });
+
+  it('hides the current status and offers clearStatus for an explicit one', () => {
+    const book = createBook({ downloadedAt: 1, readingStatus: 'finished' });
+    expect(getMobileBookContextMenuItemIds(book)).toEqual([
+      'markUnread',
+      'markReading',
+      'markAbandoned',
+      'clearStatus',
+      'showDetails',
+      'select',
+    ]);
   });
 });

@@ -301,7 +301,7 @@ describe('createBookGroups', () => {
 
       expect(groups.map(({ name }) => name)).toEqual(['unread', 'finished', 'abandoned']);
       expect(groups.map(({ displayName }) => displayName)).toEqual([
-        'Unread',
+        'Want to Read',
         'Finished',
         'On hold',
       ]);
@@ -336,9 +336,10 @@ describe('createBookGroups', () => {
           groups.map(({ name, books: b }) => [name, b.map(({ hash }) => hash).sort()]),
         ),
       ).toEqual({
-        // A never-opened book reads as unread to a user, and the app already
-        // treats 'unread' as "not started" by clearing it on first open.
-        unread: ['marked-unread', 'never-opened'],
+        // 'unread' is the explicit "Want to Read" flag; a never-opened book
+        // with no flag just sits in the library under "No status".
+        unread: ['marked-unread'],
+        none: ['never-opened'],
         reading: ['in-progress', 'marked-reading'],
         finished: ['done'],
         abandoned: ['parked'],
@@ -354,9 +355,8 @@ describe('createBookGroups', () => {
         (item): item is BooksGroup => 'books' in item,
       );
 
-      // Keys that already exist in every public/locales/<lang>/translation.json.
       expect(groups.map(({ displayName }) => displayName)).toEqual([
-        'Unread',
+        'Want to Read',
         'Reading',
         'Finished',
         'On hold',
@@ -385,8 +385,8 @@ describe('createBookGroups', () => {
 
       expect(groups.map(({ name, displayName }) => [name, displayName])).toEqual([
         ['reading', 'Reading'],
-        // Never opened: no progress to derive from, so it falls to Unread.
-        ['unread', 'Unread'],
+        // Never opened and never flagged: no status at all.
+        ['none', 'No status'],
       ]);
       expect(groups[0]!.books.map(({ hash }) => hash)).toEqual(['in-progress']);
       expect(groups[1]!.books.map(({ hash }) => hash)).toEqual(['never-opened']);

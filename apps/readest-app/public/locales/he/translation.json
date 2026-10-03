@@ -59,7 +59,6 @@
   "Select Book": "בחר ספר",
   "Group Books": "קבץ ספרים",
   "Mark as Finished": "סמן כסיים",
-  "Mark as Unread": "סמן כלא נקרא",
   "Clear Status": "נקה סטטוס",
   "Delete": "מחק",
   "Deselect Group": "בטל בחירת קבוצה",
@@ -116,7 +115,6 @@
   "Restart App": "הפעל מחדש אפליקציה",
   "Start Migration": "התחל העברה",
   "Finished": "הסתיים",
-  "Unread": "לא נקרא",
   "Open": "פתח",
   "Status": "סטטוס",
   "Details": "פרטים",
@@ -2583,5 +2581,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "לא ניתן לקשר את הקורא. יש לבדוק את הקוד או להתחבר מחדש בקורא.",
   "Link Reader": "קישור הקורא",
   "Failed to copy the image": "העתקת התמונה נכשלה",
-  "Copy Image": "העתקת התמונה"
+  "Copy Image": "העתקת התמונה",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

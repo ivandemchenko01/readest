@@ -7,6 +7,7 @@ import { BookMetadata } from '@/libs/document';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeStore } from '@/store/themeStore';
+import { useLibraryStore } from '@/store/libraryStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMetadataEdit } from './useMetadataEdit';
 import { DeleteAction } from '@/types/system';
@@ -164,8 +165,10 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
       setBookTags(savedTags);
       // Capture the updated book before handleBookMetadataUpdate clears the
       // temporary cover fields on editedMeta, so the view refreshes its cover.
-      setDisplayBook(getBookWithUpdatedMetadata(book, editedMeta, savedTags));
-      handleBookMetadataUpdate(book, editedMeta, savedTags);
+      // Build on the stored book: the status selector may have changed it.
+      const latest = useLibraryStore.getState().getBookByHash(book.hash) ?? book;
+      setDisplayBook(getBookWithUpdatedMetadata(latest, editedMeta, savedTags));
+      handleBookMetadataUpdate(latest, editedMeta, savedTags);
       setEditMode(false);
     }
   };

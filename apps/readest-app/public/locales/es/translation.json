@@ -937,10 +937,8 @@
   "Navigation": "Navegación",
   "Set status for {{count}} book(s)_one": "Establecer estado para {{count}} libro",
   "Set status for {{count}} book(s)_other": "Establecer estado para {{count}} libros",
-  "Mark as Unread": "Marcar como no leído",
   "Mark as Finished": "Marcar como terminado",
   "Finished": "Terminado",
-  "Unread": "Sin leer",
   "Clear Status": "Borrar estado",
   "Status": "Estado",
   "Set status for {{count}} book(s)_many": "Establecer estado para {{count}} libros",
@@ -2583,5 +2581,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "No se pudo vincular el lector. Comprueba el código o vuelve a iniciar sesión en el lector.",
   "Link Reader": "Vincular lector",
   "Failed to copy the image": "No se pudo copiar la imagen",
-  "Copy Image": "Copiar imagen"
+  "Copy Image": "Copiar imagen",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

@@ -948,10 +948,8 @@
   "Navigation": "Nawigacja",
   "Set status for {{count}} book(s)_one": "Ustaw status dla {{count}} książki",
   "Set status for {{count}} book(s)_other": "Ustaw status dla {{count}} książek",
-  "Mark as Unread": "Oznacz jako nieprzeczytane",
   "Mark as Finished": "Oznacz jako ukończone",
   "Finished": "Ukończone",
-  "Unread": "Nieprzeczytane",
   "Clear Status": "Wyczyść status",
   "Status": "Status",
   "Set status for {{count}} book(s)_few": "Ustaw status dla {{count}} książek",
@@ -2647,5 +2645,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Nie udało się połączyć czytnika. Sprawdź kod lub zaloguj się ponownie na czytniku.",
   "Link Reader": "Połącz czytnik",
   "Failed to copy the image": "Nie udało się skopiować obrazu",
-  "Copy Image": "Kopiuj obraz"
+  "Copy Image": "Kopiuj obraz",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

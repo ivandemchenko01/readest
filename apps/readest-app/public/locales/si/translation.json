@@ -926,10 +926,8 @@
   "Navigation": "සංචාලනය",
   "Set status for {{count}} book(s)_one": "{{count}} පොත සඳහා තත්ත්වය සකසන්න",
   "Set status for {{count}} book(s)_other": "{{count}} පොත් සඳහා තත්ත්වය සකසන්න",
-  "Mark as Unread": "නොකියවූ ලෙස සලකුණු කරන්න",
   "Mark as Finished": "අවසන් වූ ලෙස සලකුණු කරන්න",
   "Finished": "අවසන්",
-  "Unread": "නොකියවූ",
   "Clear Status": "තත්ත්වය හිස් කරන්න",
   "Status": "තත්ත්වය",
   "Loading": "පූරණය වෙමින් පවතී...",
@@ -2519,5 +2517,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "කියවනය සම්බන්ධ කළ නොහැකි විය. කේතය පරීක්ෂා කරන්න, නැතහොත් කියවනයේ නැවත පුරනය වන්න.",
   "Link Reader": "කියවනය සම්බන්ධ කරන්න",
   "Failed to copy the image": "රූපය පිටපත් කිරීමට අසමත් විය",
-  "Copy Image": "රූපය පිටපත් කරන්න"
+  "Copy Image": "රූපය පිටපත් කරන්න",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }

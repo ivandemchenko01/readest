@@ -948,10 +948,8 @@
   "Navigation": "Навигация",
   "Set status for {{count}} book(s)_one": "Установить статус для {{count}} книги",
   "Set status for {{count}} book(s)_other": "Установить статус для {{count}} книг",
-  "Mark as Unread": "Отметить как непрочитанное",
   "Mark as Finished": "Отметить как прочитанное",
   "Finished": "Прочитано",
-  "Unread": "Не прочитано",
   "Clear Status": "Очистить статус",
   "Status": "Статус",
   "Set status for {{count}} book(s)_few": "Установить статус для {{count}} книг",
@@ -2647,5 +2645,9 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Не удалось подключить устройство. Проверьте код или войдите на устройстве заново.",
   "Link Reader": "Подключить устройство",
   "Failed to copy the image": "Не удалось скопировать изображение",
-  "Copy Image": "Копировать изображение"
+  "Copy Image": "Копировать изображение",
+  "Mark as Want to Read": "Mark as Want to Read",
+  "Mark as Reading": "Mark as Reading",
+  "Want to Read": "Want to Read",
+  "No status": "No status"
 }
