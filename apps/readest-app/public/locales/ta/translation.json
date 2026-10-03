@@ -2519,5 +2519,17 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "ரீடரை இணைக்க முடியவில்லை. குறியீட்டைச் சரிபார்க்கவும், அல்லது ரீடரில் மீண்டும் உள்நுழையவும்.",
   "Link Reader": "ரீடரை இணை",
   "Failed to copy the image": "படத்தை நகலெடுக்க முடியவில்லை",
-  "Copy Image": "படத்தை நகலெடு"
+  "Copy Image": "படத்தை நகலெடு",
+  "My Ratings": "My Ratings",
+  "{{rating}} out of 5": "{{rating}} out of 5",
+  "Date rated (newest)": "Date rated (newest)",
+  "Date rated (oldest)": "Date rated (oldest)",
+  "Rating (high to low)": "Rating (high to low)",
+  "Rating (low to high)": "Rating (low to high)",
+  "Rating": "Rating",
+  "With review only": "With review only",
+  "No rated books yet. Rate a book from its Book Details.": "No rated books yet. Rate a book from its Book Details.",
+  "Rate {{rating}} out of 5": "Rate {{rating}} out of 5",
+  "Write your review…": "Write your review…",
+  "My review": "My review"
 }

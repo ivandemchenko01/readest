@@ -2647,5 +2647,17 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Не удалось подключить устройство. Проверьте код или войдите на устройстве заново.",
   "Link Reader": "Подключить устройство",
   "Failed to copy the image": "Не удалось скопировать изображение",
-  "Copy Image": "Копировать изображение"
+  "Copy Image": "Копировать изображение",
+  "My Ratings": "Мои оценки",
+  "{{rating}} out of 5": "{{rating}} из 5",
+  "Date rated (newest)": "Дата оценки (сначала новые)",
+  "Date rated (oldest)": "Дата оценки (сначала старые)",
+  "Rating (high to low)": "По оценке (по убыванию)",
+  "Rating (low to high)": "По оценке (по возрастанию)",
+  "Rating": "Оценка",
+  "With review only": "Только с рецензией",
+  "No rated books yet. Rate a book from its Book Details.": "Оценённых книг пока нет. Оцените книгу в окне «Детали книги».",
+  "Rate {{rating}} out of 5": "Оценить на {{rating}} из 5",
+  "Write your review…": "Напишите рецензию…",
+  "My review": "Моя рецензия"
 }

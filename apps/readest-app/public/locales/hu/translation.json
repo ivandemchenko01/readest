@@ -2519,5 +2519,17 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "Nem sikerült összekapcsolni az olvasót. Ellenőrizze a kódot, vagy jelentkezzen be újra az olvasón.",
   "Link Reader": "Olvasó összekapcsolása",
   "Failed to copy the image": "Nem sikerült másolni a képet",
-  "Copy Image": "Kép másolása"
+  "Copy Image": "Kép másolása",
+  "My Ratings": "My Ratings",
+  "{{rating}} out of 5": "{{rating}} out of 5",
+  "Date rated (newest)": "Date rated (newest)",
+  "Date rated (oldest)": "Date rated (oldest)",
+  "Rating (high to low)": "Rating (high to low)",
+  "Rating (low to high)": "Rating (low to high)",
+  "Rating": "Rating",
+  "With review only": "With review only",
+  "No rated books yet. Rate a book from its Book Details.": "No rated books yet. Rate a book from its Book Details.",
+  "Rate {{rating}} out of 5": "Rate {{rating}} out of 5",
+  "Write your review…": "Write your review…",
+  "My review": "My review"
 }

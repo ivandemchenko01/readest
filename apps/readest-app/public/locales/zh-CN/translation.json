@@ -2455,5 +2455,17 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "无法关联阅读器。请检查代码，或在阅读器上重新登录。",
   "Link Reader": "关联阅读器",
   "Failed to copy the image": "图片复制失败",
-  "Copy Image": "复制图片"
+  "Copy Image": "复制图片",
+  "My Ratings": "My Ratings",
+  "{{rating}} out of 5": "{{rating}} out of 5",
+  "Date rated (newest)": "Date rated (newest)",
+  "Date rated (oldest)": "Date rated (oldest)",
+  "Rating (high to low)": "Rating (high to low)",
+  "Rating (low to high)": "Rating (low to high)",
+  "Rating": "Rating",
+  "With review only": "With review only",
+  "No rated books yet. Rate a book from its Book Details.": "No rated books yet. Rate a book from its Book Details.",
+  "Rate {{rating}} out of 5": "Rate {{rating}} out of 5",
+  "Write your review…": "Write your review…",
+  "My review": "My review"
 }

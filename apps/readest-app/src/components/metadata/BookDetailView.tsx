@@ -34,6 +34,8 @@ import { isFeedBook } from '@/services/rss/feedBookUrl';
 import { saveSysSettings } from '@/helpers/settings';
 import BookCover from '@/components/BookCover';
 import BookCoverViewer, { useBookCoverViewer } from '@/components/BookCoverViewer';
+import type { BookRatingEdit } from '@/app/library/utils/libraryUtils';
+import BookRatingSection from './BookRatingSection';
 import Dropdown from '../Dropdown';
 import MenuItem from '../MenuItem';
 
@@ -55,6 +57,7 @@ interface BookDetailViewProps {
   /** Set when the offline download needs an upgrade; shown as a badge. */
   offlinePremiumLabel?: string;
   onMetadataValueClick?: (type: 'tag' | 'subject', value: string) => void;
+  onRatingChange?: (edit: BookRatingEdit) => void;
 }
 
 const BookDetailView: React.FC<BookDetailViewProps> = ({
@@ -73,6 +76,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   onDownloadOffline,
   offlinePremiumLabel,
   onMetadataValueClick,
+  onRatingChange,
 }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
@@ -449,6 +453,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </div>
           )}
         </div>
+        {onRatingChange && <BookRatingSection book={book} onChange={onRatingChange} />}
         <div className='metadata-description'>
           <button
             className={clsx(

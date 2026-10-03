@@ -2519,5 +2519,17 @@
   "Could not link the reader. Check the code, or sign in again on the reader.": "කියවනය සම්බන්ධ කළ නොහැකි විය. කේතය පරීක්ෂා කරන්න, නැතහොත් කියවනයේ නැවත පුරනය වන්න.",
   "Link Reader": "කියවනය සම්බන්ධ කරන්න",
   "Failed to copy the image": "රූපය පිටපත් කිරීමට අසමත් විය",
-  "Copy Image": "රූපය පිටපත් කරන්න"
+  "Copy Image": "රූපය පිටපත් කරන්න",
+  "My Ratings": "My Ratings",
+  "{{rating}} out of 5": "{{rating}} out of 5",
+  "Date rated (newest)": "Date rated (newest)",
+  "Date rated (oldest)": "Date rated (oldest)",
+  "Rating (high to low)": "Rating (high to low)",
+  "Rating (low to high)": "Rating (low to high)",
+  "Rating": "Rating",
+  "With review only": "With review only",
+  "No rated books yet. Rate a book from its Book Details.": "No rated books yet. Rate a book from its Book Details.",
+  "Rate {{rating}} out of 5": "Rate {{rating}} out of 5",
+  "Write your review…": "Write your review…",
+  "My review": "My review"
 }
