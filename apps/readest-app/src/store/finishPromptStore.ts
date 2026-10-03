@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { FinishPromptMode } from '@/utils/readingSession';
+import { useLibraryStore } from './libraryStore';
 
 export interface FinishPromptRequest {
   bookHash: string;
@@ -23,5 +24,12 @@ export const useFinishPromptStore = create<FinishPromptState>((set) => ({
   dismiss: () => set({ pending: null }),
 }));
 
-export const requestFinishPrompt = (bookHash: string, mode: FinishPromptMode, deferred = false) =>
+export const requestFinishPrompt = (bookHash: string, mode: FinishPromptMode, deferred = false) => {
+  // Re-marking a book Finished must not nag again once it has a rating or review.
+  // 'confirm' (closed at 95%+) still asks, since whether it is finished is the question.
+  if (mode === 'finished') {
+    const book = useLibraryStore.getState().getBookByHash(bookHash);
+    if (book?.rating || book?.review?.trim()) return;
+  }
   useFinishPromptStore.setState({ pending: { bookHash, mode, deferred } });
+};

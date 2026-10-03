@@ -392,7 +392,9 @@ export default function BookshelfStream({
             }}
           />
         </div>
-        {pageNavigation && !hidePageButtons && (
+        {/* Fork: hide the e-ink pager when everything fits on one page — disabled
+            buttons look identical to enabled ones on e-ink and read as broken. */}
+        {pageNavigation && !hidePageButtons && !(start && end) && (
           <nav
             aria-label={_('Pagination')}
             className='not-eink:hidden bg-base-100 border-base-content shrink-0 border-t px-4 sm:px-6'
