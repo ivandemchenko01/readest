@@ -96,8 +96,8 @@ Event layout (KOReader semantics: one row = time spent on one page):
 
 ## i18n
 
-All strings via `_()`; `pnpm i18n:extract`; Russian translations filled; other locales get the
-English text. Labels avoid count-dependent sentences (label + number), so no plural forms are needed.
+All strings via `_()`; `pnpm i18n:extract`; the UI language is English, so every locale (ru included) gets the
+English text for the new keys. Labels avoid count-dependent sentences (label + number), so no plural forms are needed.
 
 ## Pure helpers (`src/utils/readingStats.ts`)
 
